@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from pomodoro.formatting import format_clock
+from pomodoro.ideas import IdeaRotator
 from pomodoro.settings import MODE_NAME, AppConfig, Mode, save_config
 from pomodoro.timer_logic import Phase, PomodoroTimer
 from pomodoro.ui.break_manager import BreakOverlayManager
@@ -57,13 +58,15 @@ class MainWindow(QWidget):
         self._timer = PomodoroTimer(self._config.timer_settings())
         self._last_tick = time.monotonic()
         self._overlay = BreakOverlayManager(self)
+        self._ideas = IdeaRotator(custom=self._config.ideas)
+        self._overlay.set_custom_ideas(self._config.ideas)
         self._overlay.math_unlocked.connect(self._on_math_unlocked)
         self._overlay.important_chosen.connect(self._on_important)
         self._overlay.emergency_exit.connect(self._on_emergency_exit)
         self._force_break_active = False
 
         self.setWindowTitle("Pomodoro Timer")
-        self.setMinimumSize(520, 580)
+        self.setMinimumSize(520, 640)
         self._build_ui()
 
         self._clock_checker = QTimer(self)
@@ -96,11 +99,13 @@ class MainWindow(QWidget):
         # Two buttons for trying the break screen. Dev-only, removed later.
         self._test_button = QPushButton("Test overlay")
         self._test_no_math_button = QPushButton("Test: no math left")
+        self._test_long_button = QPushButton("Test: long break")
         self._toggle_button.clicked.connect(self._on_toggle)
         self._reset_button.clicked.connect(self._on_reset)
         self._settings_button.clicked.connect(self._on_settings)
         self._test_button.clicked.connect(self._on_test_overlay)
         self._test_no_math_button.clicked.connect(self._on_test_overlay_no_math)
+        self._test_long_button.clicked.connect(self._on_test_overlay_long)
 
         buttons = QHBoxLayout()
         for button in (
@@ -125,6 +130,7 @@ class MainWindow(QWidget):
         test_buttons.addWidget(self._test_button)
         test_buttons.addWidget(self._test_no_math_button)
         layout.addLayout(test_buttons)
+        layout.addWidget(self._test_long_button)
 
     # ----- button actions --------------------------------------------------
 
@@ -158,6 +164,12 @@ class MainWindow(QWidget):
             return
         self._overlay.show_test(TEST_OVERLAY_SECONDS, 0)
 
+    def _on_test_overlay_long(self) -> None:
+        """Try the break screen as it looks in a long break (creative ideas)."""
+        if self._force_break_active:
+            return
+        self._overlay.show_test(TEST_OVERLAY_SECONDS, DAILY_MATH_LIMIT, long_break=True)
+
     def _on_settings(self) -> None:
         if self._force_break_active:
             return
@@ -169,6 +181,8 @@ class MainWindow(QWidget):
             save_config(self._config)
         except OSError:
             self._message_label.setText("Could not save your settings.")
+        self._ideas = IdeaRotator(custom=self._config.ideas)
+        self._overlay.set_custom_ideas(self._config.ideas)
         self._timer.update_settings(self._config.timer_settings())
         self._refresh()
 
@@ -193,7 +207,10 @@ class MainWindow(QWidget):
                 self._start_force_break()
                 return
             if self._timer.phase is Phase.LONG_BREAK:
-                text = "Great work! Time for your long break."
+                text = (
+                    "Great work! Time for your long break.\n"
+                    f"Try something creative: {self._ideas.next_idea()}"
+                )
             else:
                 text = "Focus done! Take a short break."
         else:
@@ -210,7 +227,9 @@ class MainWindow(QWidget):
         self._force_break_active = True
         self._message_label.setText("Force Break: time to rest.")
         self._overlay.show(
-            format_clock(self._timer.remaining_seconds), self._usage.math_left
+            format_clock(self._timer.remaining_seconds),
+            self._usage.math_left,
+            long_break=self._timer.phase is Phase.LONG_BREAK,
         )
 
     def _end_force_break(self) -> None:

@@ -94,8 +94,16 @@ QLineEdit {{
     font-size: 17px;
 }}
 
-QLineEdit:focus {{
+QLineEdit:focus, QPlainTextEdit:focus {{
     border: 1px solid {ACCENT};
+}}
+
+QPlainTextEdit {{
+    background-color: {SURFACE};
+    border: 1px solid {BORDER};
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 17px;
 }}
 
 QLineEdit#overlayAnswer {{

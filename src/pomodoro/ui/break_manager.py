@@ -21,6 +21,7 @@ from PySide6.QtGui import QGuiApplication
 
 from pomodoro.backgrounds import BackgroundPicker
 from pomodoro.formatting import format_clock
+from pomodoro.ideas import IDEA_CATEGORY, IdeaRotator
 from pomodoro.tips import Tip, TipRotator, tip_display_seconds
 from pomodoro.ui.break_overlay import BreakOverlay
 
@@ -39,10 +40,14 @@ class BreakOverlayManager(QObject):
         parent: Optional[QObject] = None,
         rotator: Optional[TipRotator] = None,
         picker: Optional[BackgroundPicker] = None,
+        idea_rotator: Optional[IdeaRotator] = None,
     ) -> None:
         super().__init__(parent)
         self._rotator = rotator or TipRotator()
         self._picker = picker or BackgroundPicker()
+        self._ideas = idea_rotator or IdeaRotator()
+        self._long_break = False
+        self._idea_turn = False
         self._overlays: list = []
         self._clock_text = ""
         self._tip: Optional[Tip] = None
@@ -75,11 +80,16 @@ class BreakOverlayManager(QObject):
 
     # ----- what the main window calls --------------------------------------
 
-    def show(self, clock_text: str, math_left: int) -> None:
+    def set_custom_ideas(self, ideas) -> None:
+        """Use these ideas of your own (plus the built-in ones) in long breaks."""
+        self._ideas = IdeaRotator(custom=ideas)
+
+    def show(self, clock_text: str, math_left: int, long_break: bool = False) -> None:
         """Open the break windows (does nothing new if already open).
 
         ``math_left`` is how many math unlocks remain today. With none left,
-        the windows offer the Important button instead.
+        the windows offer the Important button instead. In a long break, a
+        creative idea and a healthy tip take turns (starting with the idea).
         """
         self._clock_text = clock_text
         if self.is_active:
@@ -87,6 +97,8 @@ class BreakOverlayManager(QObject):
             return
         self._math_left = math_left
         self._important_used = False
+        self._long_break = long_break
+        self._idea_turn = long_break
         self._choose_tip()
         self._open_overlays()
         self._keep_on_top.start()
@@ -110,7 +122,9 @@ class BreakOverlayManager(QObject):
         self._is_test = False
         self._close_overlays()
 
-    def show_test(self, seconds: int, math_left: int) -> None:
+    def show_test(
+        self, seconds: int, math_left: int, long_break: bool = False
+    ) -> None:
         """Try the break screen for a while (for testing only).
 
         Nothing is counted and the timer is not touched: solving a problem
@@ -120,13 +134,18 @@ class BreakOverlayManager(QObject):
             return
         self._is_test = True
         self._test_remaining = seconds
-        self.show(format_clock(seconds), math_left)
+        self.show(format_clock(seconds), math_left, long_break)
         self._test_timer.start()
 
     # ----- internals -------------------------------------------------------
 
     def _choose_tip(self) -> None:
-        self._tip = self._rotator.next_tip()
+        if self._long_break and self._idea_turn:
+            self._tip = Tip(IDEA_CATEGORY, self._ideas.next_idea())
+        else:
+            self._tip = self._rotator.next_tip()
+        if self._long_break:
+            self._idea_turn = not self._idea_turn
         self._image = self._picker.pick(self._tip.category)
 
     def _schedule_next_tip(self) -> None:

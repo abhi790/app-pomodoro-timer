@@ -82,6 +82,35 @@ class SaveAndLoadTest(unittest.TestCase):
         self.path.write_text(json.dumps({"mode": "custom"}), encoding="utf-8")
         self.assertEqual(load_config(self.path), AppConfig())
 
+    def test_your_ideas_are_saved_and_loaded(self):
+        config = AppConfig(ideas=("Juggle three socks", "Write a limerick"))
+        save_config(config, self.path)
+        self.assertEqual(load_config(self.path).ideas, config.ideas)
+
+    def test_old_file_without_ideas_still_loads(self):
+        self.path.parent.mkdir(parents=True)
+        data = AppConfig(mode=Mode.FORCE_BREAK).to_dict()
+        del data["ideas"]
+        self.path.write_text(json.dumps(data), encoding="utf-8")
+        loaded = load_config(self.path)
+        self.assertEqual(loaded.mode, Mode.FORCE_BREAK)
+        self.assertEqual(loaded.ideas, ())
+
+    def test_saved_ideas_are_tidied_when_loaded(self):
+        self.path.parent.mkdir(parents=True)
+        data = AppConfig().to_dict()
+        data["ideas"] = ["  paint   a rock ", "", "Paint a rock"]
+        self.path.write_text(json.dumps(data), encoding="utf-8")
+        self.assertEqual(load_config(self.path).ideas, ("paint a rock",))
+
+    def test_ideas_of_the_wrong_type_give_defaults(self):
+        self.path.parent.mkdir(parents=True)
+        for bad in ("just text", 5, [1, 2]):
+            data = AppConfig().to_dict()
+            data["ideas"] = bad
+            self.path.write_text(json.dumps(data), encoding="utf-8")
+            self.assertEqual(load_config(self.path), AppConfig(), bad)
+
 
 if __name__ == "__main__":
     unittest.main()

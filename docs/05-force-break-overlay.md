@@ -13,6 +13,8 @@ Break Reminder and Custom Timer modes do not open this screen.
 
 ## Healthy tips
 
+In a long break the screen also shows creative ideas between the tips. See [06-creative-breaks.md](06-creative-breaks.md).
+
 There are more than 100 tips in 7 categories:
 
 | Category | Picture folder | Examples |
@@ -53,7 +55,7 @@ While the break is on, Start, Reset and Settings in the main window are locked.
 
 ## Trying it
 
-The main window has two small test buttons. They show the break screen for 60 seconds, then close it. They are only for testing and will be removed later. See [05b-math-unlock.md](05b-math-unlock.md) for what each one shows.
+The main window has three small test buttons. They show the break screen for 60 seconds, then close it. They are only for testing and will be removed later. See [05b-math-unlock.md](05b-math-unlock.md) for what each one shows.
 
 ## Code
 

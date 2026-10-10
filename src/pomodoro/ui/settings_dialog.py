@@ -8,19 +8,21 @@ from PySide6.QtWidgets import (
     QDialogButtonBox,
     QFormLayout,
     QLabel,
+    QPlainTextEdit,
     QSpinBox,
     QVBoxLayout,
     QWidget,
 )
 
+from pomodoro.ideas import ideas_from_text, ideas_to_text
 from pomodoro.settings import MODE_NAME, PRESETS, AppConfig, Mode
 from pomodoro.timer_logic import TimerSettings
 
 MODE_HINT = {
     Mode.BREAK_REMINDER: "A gentle reminder when it is time to rest.",
     Mode.FORCE_BREAK: (
-        "Breaks take over the screen. The full-screen break is coming in a "
-        "later step; for now this mode only sets the times."
+        "Breaks take over every screen. You can leave early by solving a "
+        "math problem, a few times a day."
     ),
     Mode.CUSTOM: "Set your own times below.",
 }
@@ -58,6 +60,19 @@ class SettingsDialog(QDialog):
         form.addRow("Long break", self._long_break)
         form.addRow("Long break after", self._cycle)
 
+        ideas_label = QLabel(
+            "Your own long-break ideas (one per line). "
+            "They are mixed in with the built-in ones."
+        )
+        ideas_label.setObjectName("muted")
+        ideas_label.setWordWrap(True)
+        self._ideas_edit = QPlainTextEdit()
+        self._ideas_edit.setPlaceholderText(
+            "For example:\nPaint a small rock\nPlay the guitar for ten minutes"
+        )
+        self._ideas_edit.setMinimumHeight(110)
+        self._ideas_edit.setPlainText(ideas_to_text(config.ideas))
+
         buttons = QDialogButtonBox(
             QDialogButtonBox.Save | QDialogButtonBox.Cancel
         )
@@ -69,6 +84,8 @@ class SettingsDialog(QDialog):
         layout.setSpacing(18)
         layout.addLayout(form)
         layout.addWidget(self._hint)
+        layout.addWidget(ideas_label)
+        layout.addWidget(self._ideas_edit)
         layout.addWidget(buttons)
 
         self._mode_box.currentIndexChanged.connect(self._on_mode_changed)
@@ -122,4 +139,8 @@ class SettingsDialog(QDialog):
 
     def result_config(self) -> AppConfig:
         """The settings the user chose. Use after the dialog was accepted."""
-        return AppConfig(mode=self._current_mode(), custom=self._custom)
+        return AppConfig(
+            mode=self._current_mode(),
+            custom=self._custom,
+            ideas=ideas_from_text(self._ideas_edit.toPlainText()),
+        )

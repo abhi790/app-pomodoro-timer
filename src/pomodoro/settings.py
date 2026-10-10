@@ -14,8 +14,9 @@ import os
 from dataclasses import asdict, dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Tuple
 
+from pomodoro.ideas import clean_ideas
 from pomodoro.timer_logic import TimerSettings
 
 
@@ -53,6 +54,8 @@ class AppConfig:
 
     mode: Mode = Mode.CUSTOM
     custom: TimerSettings = TimerSettings()
+    # The user's own long-break ideas, added to the built-in ones.
+    ideas: Tuple[str, ...] = ()
 
     def timer_settings(self) -> TimerSettings:
         """The times to use right now, based on the chosen mode."""
@@ -61,15 +64,21 @@ class AppConfig:
         return PRESETS[self.mode]
 
     def to_dict(self) -> dict:
-        return {"mode": self.mode.value, "custom": asdict(self.custom)}
+        return {
+            "mode": self.mode.value,
+            "custom": asdict(self.custom),
+            "ideas": list(self.ideas),
+        }
 
     @classmethod
     def from_dict(cls, data: dict) -> "AppConfig":
         """Build a config from saved data. Raises ValueError, TypeError or
-        KeyError if the data is not valid."""
+        KeyError if the data is not valid. Older files without ``ideas`` are
+        fine: they just have no ideas of your own."""
         return cls(
             mode=Mode(data["mode"]),
             custom=TimerSettings(**data["custom"]),
+            ideas=clean_ideas(data.get("ideas", ())),
         )
 
 

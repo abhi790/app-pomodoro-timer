@@ -34,6 +34,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from pomodoro.ideas import IDEA_CATEGORY, IDEA_TITLE
 from pomodoro.tips import CATEGORY_TITLE, Tip
 from pomodoro.ui.unlock_panel import UnlockPanel
 
@@ -49,7 +50,12 @@ CATEGORY_GRADIENT = {
     "posture": ("#2d2a52", "#4c63b8"),
     "sleep": ("#0d1030", "#3a2a7a"),
     "mind": ("#1f3d3a", "#4f8a78"),
+    IDEA_CATEGORY: ("#4a1d5c", "#c2477f"),
 }
+
+# The small title above the text: the tip categories, plus the creative ideas
+# that long breaks show.
+TITLES = {**CATEGORY_TITLE, IDEA_CATEGORY: IDEA_TITLE}
 
 # A dark layer over the picture so the white text is easy to read.
 SCRIM = QColor(0, 0, 0, 150)
@@ -182,7 +188,7 @@ class BreakOverlay(QWidget):
         image_path: Optional[Path] = None,
         animate: bool = True,
     ) -> None:
-        self._category_label.setText(CATEGORY_TITLE.get(tip.category, "").upper())
+        self._category_label.setText(TITLES.get(tip.category, "").upper())
         self._tip_label.setText(tip.text)
 
         image = QPixmap(str(image_path)) if image_path else None

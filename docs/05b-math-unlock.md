@@ -46,7 +46,7 @@ If the file is missing or damaged, the app simply starts today's count from zero
 
 ## Trying it
 
-The main window has two test buttons. Both show the break screen for 60 seconds on every monitor, and nothing is counted:
+The main window has three test buttons (the third, **Test: long break**, is explained in [06-creative-breaks.md](06-creative-breaks.md)). All of them show the break screen for 60 seconds on every monitor, and nothing is counted:
 
 - **Test overlay:** shows the math button with "3 of 3" unlocks left. Solving a problem closes the test screen.
 - **Test: no math left:** shows the screen as it looks after the 3 unlocks are used up, with the Important button. Pressing it hides the button and shows the message.

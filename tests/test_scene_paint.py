@@ -3,8 +3,9 @@ import unittest
 from PySide6.QtCore import QRectF
 from PySide6.QtGui import QImage, QPainter
 
+from pomodoro.ideas import IDEA_CATEGORY
 from pomodoro.tips import CATEGORIES
-from pomodoro.ui.break_overlay import CATEGORY_GRADIENT, Scene
+from pomodoro.ui.break_overlay import CATEGORY_GRADIENT, TITLES, Scene
 
 
 def paint_scene(category: str) -> QImage:
@@ -21,8 +22,14 @@ class ScenePaintTest(unittest.TestCase):
         for category in CATEGORIES:
             self.assertIn(category, CATEGORY_GRADIENT)
 
+    def test_creative_ideas_have_their_own_colors_and_title(self):
+        self.assertIn(IDEA_CATEGORY, CATEGORY_GRADIENT)
+        self.assertTrue(TITLES[IDEA_CATEGORY])
+        for category in CATEGORIES:
+            self.assertIn(category, TITLES)
+
     def test_scene_without_picture_paints_every_pixel(self):
-        for category in list(CATEGORIES) + ["", "unknown"]:
+        for category in list(CATEGORIES) + [IDEA_CATEGORY, "", "unknown"]:
             image = paint_scene(category)
             self.assertEqual(image.pixelColor(160, 90).alpha(), 255, category)
             self.assertEqual(image.pixelColor(0, 0).alpha(), 255, category)

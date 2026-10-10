@@ -12,7 +12,7 @@ Click **Settings** in the main window to choose a mode and your times.
 
 - **Break Reminder** and **Force Break** have fixed times. The boxes are greyed out so you can see them but not change them.
 - **Custom Timer** lets you set every number. If you switch to another mode and come back, your custom times are still there.
-- Today, Force Break only changes the times. The full-screen break arrives in a later step.
+- **Force Break** also covers every monitor with a full-screen break when a focus block ends. See [05-force-break-overlay.md](05-force-break-overlay.md).
 
 ## Saving
 
