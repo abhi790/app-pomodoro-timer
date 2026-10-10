@@ -18,8 +18,9 @@ from PySide6.QtWidgets import (
 )
 
 from pomodoro.formatting import format_clock
-from pomodoro.settings import MODE_NAME, AppConfig, save_config
+from pomodoro.settings import MODE_NAME, AppConfig, Mode, save_config
 from pomodoro.timer_logic import Phase, PomodoroTimer
+from pomodoro.ui.break_overlay import BreakOverlayManager
 from pomodoro.ui.settings_dialog import SettingsDialog
 
 PHASE_NAME = {
@@ -38,6 +39,9 @@ PHASE_COLOR = {
 # whole seconds, this just keeps the display from drifting.
 CHECK_INTERVAL_MS = 200
 
+# How long the "Test overlay" button shows the break screen.
+TEST_OVERLAY_SECONDS = 20
+
 
 class MainWindow(QWidget):
     def __init__(self, config: Optional[AppConfig] = None) -> None:
@@ -45,6 +49,8 @@ class MainWindow(QWidget):
         self._config = config or AppConfig()
         self._timer = PomodoroTimer(self._config.timer_settings())
         self._last_tick = time.monotonic()
+        self._overlay = BreakOverlayManager(self)
+        self._force_break_active = False
 
         self.setWindowTitle("Pomodoro Timer")
         self.setMinimumSize(520, 520)
@@ -77,9 +83,11 @@ class MainWindow(QWidget):
         self._toggle_button = QPushButton("Start")
         self._reset_button = QPushButton("Reset")
         self._settings_button = QPushButton("Settings")
+        self._test_button = QPushButton("Test overlay")  # dev-only, removed later
         self._toggle_button.clicked.connect(self._on_toggle)
         self._reset_button.clicked.connect(self._on_reset)
         self._settings_button.clicked.connect(self._on_settings)
+        self._test_button.clicked.connect(self._on_test_overlay)
 
         buttons = QHBoxLayout()
         for button in (
@@ -100,10 +108,13 @@ class MainWindow(QWidget):
         layout.addWidget(self._message_label)
         layout.addStretch(1)
         layout.addLayout(buttons)
+        layout.addWidget(self._test_button)
 
     # ----- button actions --------------------------------------------------
 
     def _on_toggle(self) -> None:
+        if self._force_break_active:
+            return
         if self._timer.running:
             self._timer.pause()
         else:
@@ -113,11 +124,20 @@ class MainWindow(QWidget):
         self._refresh()
 
     def _on_reset(self) -> None:
+        if self._force_break_active:
+            return
         self._timer.reset()
         self._message_label.setText("")
         self._refresh()
 
+    def _on_test_overlay(self) -> None:
+        if self._force_break_active:
+            return
+        self._overlay.show_test(TEST_OVERLAY_SECONDS)
+
     def _on_settings(self) -> None:
+        if self._force_break_active:
+            return
         dialog = SettingsDialog(self._config, self)
         if dialog.exec() != SettingsDialog.Accepted:
             return
@@ -146,14 +166,32 @@ class MainWindow(QWidget):
 
     def _announce(self, finished: Phase) -> None:
         if finished is Phase.FOCUS:
+            if self._config.mode is Mode.FORCE_BREAK:
+                self._start_force_break()
+                return
             if self._timer.phase is Phase.LONG_BREAK:
                 text = "Great work! Time for your long break."
             else:
                 text = "Focus done! Take a short break."
         else:
+            self._end_force_break()
             text = "Break is over. Ready to focus?"
         self._message_label.setText(text)
         QApplication.alert(self)  # flash the taskbar icon
+
+    def _start_force_break(self) -> None:
+        """Focus is done in Force Break mode: start the break and cover the
+        screens. The overlay closes by itself when the break ends."""
+        self._timer.start()
+        self._last_tick = time.monotonic()
+        self._force_break_active = True
+        self._message_label.setText("Force Break: time to rest.")
+        self._overlay.show(format_clock(self._timer.remaining_seconds))
+
+    def _end_force_break(self) -> None:
+        if self._force_break_active:
+            self._force_break_active = False
+            self._overlay.hide()
 
     # ----- showing the state -----------------------------------------------
 
@@ -170,3 +208,5 @@ class MainWindow(QWidget):
         self._mode_label.setText(f"Mode: {MODE_NAME[self._config.mode]}")
         self._toggle_button.setText("Pause" if self._timer.running else "Start")
         self.setWindowTitle(f"{clock} - {PHASE_NAME[phase]}")
+        if self._force_break_active:
+            self._overlay.update_clock(clock)

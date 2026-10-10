@@ -17,6 +17,7 @@ TEXT = "#f4f4f7"
 TEXT_MUTED = "#a3a3b3"
 TEXT_DISABLED = "#6c6c7a"
 ACCENT = "#4c8dff"
+BREAK_GREEN = "#3c9d5d"
 
 APP_STYLE = f"""
 QWidget {{
@@ -47,6 +48,26 @@ QLabel#muted {{
 
 QLabel#message {{
     font-size: 18px;
+}}
+
+QLabel#overlayTitle {{
+    color: {BREAK_GREEN};
+    font-size: 44px;
+    font-weight: 600;
+}}
+
+QLabel#overlayClock {{
+    font-size: 170px;
+    font-weight: 700;
+}}
+
+QLabel#overlayTip {{
+    font-size: 36px;
+}}
+
+QLabel#overlayHint {{
+    color: {TEXT_MUTED};
+    font-size: 20px;
 }}
 
 QPushButton {{
