@@ -41,12 +41,22 @@ app-pomodoro-timer/
 ## Roadmap
 
 - [x] Step 1: project setup (repo, license, README)
-- [ ] Step 2: timer logic (focus, short break, long break) with tests
+- [x] Step 2: timer logic (focus, short break, long break) with tests
 - [ ] Step 3: a simple window with Start, Pause and Reset
 - [ ] Step 4: settings screen (customize times)
 - [ ] Step 5: creative long-break suggestions
 - [ ] Step 6: sound, notifications and tray icon
 - [ ] Step 7: build a Windows `.exe` and finish the docs
+
+## Run the tests
+
+You only need Python 3.10 or newer. In a Command Prompt, inside the project folder:
+
+```
+python -m unittest discover -s tests -t . -v
+```
+
+All tests should say `ok`. See [docs/02-timer-logic.md](docs/02-timer-logic.md) for what the timer does.
 
 ## Contributing
 
