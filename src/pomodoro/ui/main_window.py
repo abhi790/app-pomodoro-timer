@@ -1,4 +1,4 @@
-"""The main window: big countdown plus Start/Pause, Reset and Skip buttons.
+"""The main window: big countdown plus Start/Pause and Reset buttons.
 
 All the timing rules live in ``timer_logic.py``. This file only shows the
 state on screen and passes button clicks to the timer.
