@@ -47,13 +47,13 @@ Each tip has a background picture that matches its category. The picture changes
 - Alt+F4 and Esc do nothing.
 - If you click away, the window comes back to the front.
 
-There are no system tricks. Task Manager and Ctrl+Alt+Del still work. In this step the only way out is to wait for the break to end. Solving a math problem to leave early comes in step 5b.
+There are no system tricks. Task Manager and Ctrl+Alt+Del still work. You can leave early only by solving a math problem or, when those are used up, with the Important button. See [05b-math-unlock.md](05b-math-unlock.md).
 
 While the break is on, Start, Reset and Settings in the main window are locked.
 
 ## Trying it
 
-The main window has a small **Test overlay** button. It shows the break screen for 20 seconds, then closes it. This button is only for testing and will be removed later. 20 seconds is long enough to see one or two tips.
+The main window has two small test buttons. They show the break screen for 60 seconds, then close it. They are only for testing and will be removed later. See [05b-math-unlock.md](05b-math-unlock.md) for what each one shows.
 
 ## Code
 
@@ -61,5 +61,6 @@ The main window has a small **Test overlay** button. It shows the break screen f
 |---|---|
 | `src/pomodoro/tips.py` | The tips, their categories, the shuffle and the display time (no windows, has tests) |
 | `src/pomodoro/backgrounds.py` | Finds and picks the background pictures (no windows, has tests) |
-| `src/pomodoro/ui/break_overlay.py` | The full-screen window and the manager that opens one per monitor |
+| `src/pomodoro/ui/break_overlay.py` | One full-screen window (picture, tip, countdown) |
+| `src/pomodoro/ui/break_manager.py` | Opens one window per monitor, keeps them on top, rotates the tips |
 | `src/pomodoro/ui/main_window.py` | Starts the break and opens or closes the overlay |

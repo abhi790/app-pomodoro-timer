@@ -72,8 +72,35 @@ QLabel#overlayTip {{
 }}
 
 QLabel#overlayHint {{
-    color: {TEXT_MUTED};
+    color: #c9c9d6;
     font-size: 20px;
+}}
+
+QLabel#overlayQuiz {{
+    font-size: 44px;
+    font-weight: 700;
+}}
+
+QWidget#overlayPanel {{
+    background: transparent;
+}}
+
+QLineEdit {{
+    background-color: {SURFACE};
+    border: 1px solid {BORDER};
+    border-radius: 8px;
+    padding: 6px 12px;
+    min-height: 30px;
+    font-size: 17px;
+}}
+
+QLineEdit:focus {{
+    border: 1px solid {ACCENT};
+}}
+
+QLineEdit#overlayAnswer {{
+    font-size: 32px;
+    font-weight: 600;
 }}
 
 QPushButton {{

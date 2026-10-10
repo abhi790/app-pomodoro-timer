@@ -20,8 +20,9 @@ from PySide6.QtWidgets import (
 from pomodoro.formatting import format_clock
 from pomodoro.settings import MODE_NAME, AppConfig, Mode, save_config
 from pomodoro.timer_logic import Phase, PomodoroTimer
-from pomodoro.ui.break_overlay import BreakOverlayManager
+from pomodoro.ui.break_manager import BreakOverlayManager
 from pomodoro.ui.settings_dialog import SettingsDialog
+from pomodoro.usage import DAILY_MATH_LIMIT, IMPORTANT_BREAK_SECONDS, UsageTracker
 
 PHASE_NAME = {
     Phase.FOCUS: "Focus",
@@ -39,21 +40,29 @@ PHASE_COLOR = {
 # whole seconds, this just keeps the display from drifting.
 CHECK_INTERVAL_MS = 200
 
-# How long the "Test overlay" button shows the break screen.
-TEST_OVERLAY_SECONDS = 20
+# How long the test buttons show the break screen (long enough to solve a
+# math problem and read a tip or two).
+TEST_OVERLAY_SECONDS = 60
 
 
 class MainWindow(QWidget):
-    def __init__(self, config: Optional[AppConfig] = None) -> None:
+    def __init__(
+        self,
+        config: Optional[AppConfig] = None,
+        usage: Optional[UsageTracker] = None,
+    ) -> None:
         super().__init__()
         self._config = config or AppConfig()
+        self._usage = usage or UsageTracker()
         self._timer = PomodoroTimer(self._config.timer_settings())
         self._last_tick = time.monotonic()
         self._overlay = BreakOverlayManager(self)
+        self._overlay.math_unlocked.connect(self._on_math_unlocked)
+        self._overlay.important_chosen.connect(self._on_important)
         self._force_break_active = False
 
         self.setWindowTitle("Pomodoro Timer")
-        self.setMinimumSize(520, 520)
+        self.setMinimumSize(520, 580)
         self._build_ui()
 
         self._clock_checker = QTimer(self)
@@ -83,11 +92,14 @@ class MainWindow(QWidget):
         self._toggle_button = QPushButton("Start")
         self._reset_button = QPushButton("Reset")
         self._settings_button = QPushButton("Settings")
-        self._test_button = QPushButton("Test overlay")  # dev-only, removed later
+        # Two buttons for trying the break screen. Dev-only, removed later.
+        self._test_button = QPushButton("Test overlay")
+        self._test_no_math_button = QPushButton("Test: no math left")
         self._toggle_button.clicked.connect(self._on_toggle)
         self._reset_button.clicked.connect(self._on_reset)
         self._settings_button.clicked.connect(self._on_settings)
         self._test_button.clicked.connect(self._on_test_overlay)
+        self._test_no_math_button.clicked.connect(self._on_test_overlay_no_math)
 
         buttons = QHBoxLayout()
         for button in (
@@ -108,7 +120,10 @@ class MainWindow(QWidget):
         layout.addWidget(self._message_label)
         layout.addStretch(1)
         layout.addLayout(buttons)
-        layout.addWidget(self._test_button)
+        test_buttons = QHBoxLayout()
+        test_buttons.addWidget(self._test_button)
+        test_buttons.addWidget(self._test_no_math_button)
+        layout.addLayout(test_buttons)
 
     # ----- button actions --------------------------------------------------
 
@@ -131,9 +146,16 @@ class MainWindow(QWidget):
         self._refresh()
 
     def _on_test_overlay(self) -> None:
+        """Try the break screen with all math unlocks available."""
         if self._force_break_active:
             return
-        self._overlay.show_test(TEST_OVERLAY_SECONDS)
+        self._overlay.show_test(TEST_OVERLAY_SECONDS, DAILY_MATH_LIMIT)
+
+    def _on_test_overlay_no_math(self) -> None:
+        """Try the break screen as it looks when the math unlocks are used up."""
+        if self._force_break_active:
+            return
+        self._overlay.show_test(TEST_OVERLAY_SECONDS, 0)
 
     def _on_settings(self) -> None:
         if self._force_break_active:
@@ -186,12 +208,35 @@ class MainWindow(QWidget):
         self._last_tick = time.monotonic()
         self._force_break_active = True
         self._message_label.setText("Force Break: time to rest.")
-        self._overlay.show(format_clock(self._timer.remaining_seconds))
+        self._overlay.show(
+            format_clock(self._timer.remaining_seconds), self._usage.math_left
+        )
 
     def _end_force_break(self) -> None:
         if self._force_break_active:
             self._force_break_active = False
             self._overlay.hide()
+
+    def _on_math_unlocked(self) -> None:
+        """A math problem was solved: the break ends now. The timer waits on
+        Focus until the user presses Start."""
+        if not self._force_break_active:
+            return
+        self._usage.record_math()
+        self._timer.skip()  # break -> Focus, stopped
+        self._end_force_break()
+        self._message_label.setText("Break ended early. Ready to focus?")
+        self._refresh()
+
+    def _on_important(self) -> None:
+        """Important was pressed: the break keeps going, but at most 3 more
+        minutes."""
+        if not self._force_break_active:
+            return
+        self._usage.record_important()
+        self._timer.limit_remaining(IMPORTANT_BREAK_SECONDS)
+        self._overlay.mark_important_used()
+        self._refresh()  # shows the shorter clock on the break screen
 
     # ----- showing the state -----------------------------------------------
 
