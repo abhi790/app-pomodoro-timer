@@ -61,6 +61,12 @@ QLabel#overlayClock {{
     font-weight: 700;
 }}
 
+QLabel#overlayCategory {{
+    color: #d8d8e2;
+    font-size: 24px;
+    font-weight: 600;
+}}
+
 QLabel#overlayTip {{
     font-size: 36px;
 }}
