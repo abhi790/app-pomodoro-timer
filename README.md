@@ -2,18 +2,20 @@
 
 A simple, free and open-source Pomodoro timer for your desktop (Windows).
 
-> **Status:** just getting started. The app is being built step by step, and this README grows with every step.
+> **Status:** work in progress. The app is being built step by step, and this README grows with every step.
 
 ## What is a Pomodoro timer?
 
 A Pomodoro timer helps you focus. You work for a fixed block of time (a "pomodoro"), then take a short break. After a few blocks, you take a longer break.
 
-## What this app will do
+## What this app does (and will do)
 
 - **Customizable times:** choose your own focus length, short break and long break.
 - **Focus blocks:** for example, 30 minutes of focus per pomodoro.
 - **Long break:** after every 4 pomodoros, take a longer break (for example 1 hour).
-- **Creative breaks:** the long break suggests something fun and creative, not studying (sketch, play music, go for a walk, write a poem...). You can add your own ideas.
+- **Break Reminder mode (planned):** a gentle reminder when it is time to rest.
+- **Force Break mode (planned):** a full-screen break on every monitor with healthy tips. You can only leave early by solving a simple math problem, a few times per day.
+- **Creative breaks (planned):** the long break suggests something fun and creative, not studying (sketch, play music, go for a walk, write a poem...). You can add your own ideas.
 - **Light and simple:** no account, no internet, no ads.
 
 ## Tech stack
@@ -24,7 +26,16 @@ A Pomodoro timer helps you focus. You work for a fixed block of time (a "pomodor
 
 ## How to run it
 
-Not ready yet. The app window comes in a later step. This section will explain, in simple words, how to install and start the app.
+You need **Python 3.10 or newer** and **Git**. Open a Command Prompt and run these one by one:
+
+```
+git clone https://github.com/abhi790/app-pomodoro-timer
+cd app-pomodoro-timer
+python -m pip install -r requirements.txt
+python run.py
+```
+
+A window opens with a countdown. Press **Start** to begin focusing, **Pause** to stop for a moment, and **Reset** to start over.
 
 ## Project layout
 
@@ -32,6 +43,7 @@ Not ready yet. The app window comes in a later step. This section will explain, 
 app-pomodoro-timer/
 ├── README.md          What you are reading
 ├── LICENSE            MIT license
+├── run.py             Starts the app
 ├── requirements.txt   Python packages the app needs
 ├── src/pomodoro/      The app code
 ├── tests/             Automatic tests
@@ -42,15 +54,16 @@ app-pomodoro-timer/
 
 - [x] Step 1: project setup (repo, license, README)
 - [x] Step 2: timer logic (focus, short break, long break) with tests
-- [ ] Step 3: a simple window with Start, Pause and Reset
-- [ ] Step 4: settings screen (customize times)
-- [ ] Step 5: creative long-break suggestions
-- [ ] Step 6: sound, notifications and tray icon
-- [ ] Step 7: build a Windows `.exe` and finish the docs
+- [x] Step 3: a simple window with Start, Pause and Reset
+- [ ] Step 4: settings screen and modes (Break Reminder, Force Break, Custom)
+- [ ] Step 5a: Force Break full-screen overlay with healthy tips (all monitors)
+- [ ] Step 5b: math unlock, daily limit and the Important button
+- [ ] Step 6: creative long-break suggestions
+- [ ] Step 7: sound, tray icon and a Windows `.exe`
 
 ## Run the tests
 
-You only need Python 3.10 or newer. In a Command Prompt, inside the project folder:
+In a Command Prompt, inside the project folder:
 
 ```
 python -m unittest discover -s tests -t . -v

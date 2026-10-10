@@ -69,13 +69,11 @@ class MainWindow(QWidget):
 
         self._toggle_button = QPushButton("Start")
         self._reset_button = QPushButton("Reset")
-        self._skip_button = QPushButton("Skip")
         self._toggle_button.clicked.connect(self._on_toggle)
         self._reset_button.clicked.connect(self._on_reset)
-        self._skip_button.clicked.connect(self._on_skip)
 
         buttons = QHBoxLayout()
-        for button in (self._toggle_button, self._reset_button, self._skip_button):
+        for button in (self._toggle_button, self._reset_button):
             button.setMinimumHeight(40)
             buttons.addWidget(button)
 
@@ -102,11 +100,6 @@ class MainWindow(QWidget):
 
     def _on_reset(self) -> None:
         self._timer.reset()
-        self._message_label.setText("")
-        self._refresh()
-
-    def _on_skip(self) -> None:
-        self._timer.skip()
         self._message_label.setText("")
         self._refresh()
 
