@@ -54,7 +54,11 @@ CATEGORY_GRADIENT = {
 }
 
 # A dark layer over the picture so the white text is easy to read.
-SCRIM = QColor(0, 0, 0, 115)
+SCRIM = QColor(0, 0, 0, 150)
+
+# The tip is kept in a narrow column in the middle, so it stays on the dark,
+# calm part of the picture and is easier to read.
+TIP_MAX_WIDTH = 900
 
 
 class Scene:
@@ -118,7 +122,8 @@ class BreakOverlay(QWidget):
         self._tip_label = QLabel(alignment=Qt.AlignCenter)
         self._tip_label.setObjectName("overlayTip")
         self._tip_label.setWordWrap(True)
-        self._tip_label.setMinimumHeight(180)
+        self._tip_label.setMaximumWidth(TIP_MAX_WIDTH)
+        self._tip_label.setMinimumHeight(220)
 
         hint = QLabel(
             "Step away from the screen. It comes back when the break ends.",
@@ -134,7 +139,7 @@ class BreakOverlay(QWidget):
         layout.addWidget(title)
         layout.addWidget(self._clock_label)
         layout.addWidget(self._category_label)
-        layout.addWidget(self._tip_label)
+        layout.addWidget(self._tip_label, alignment=Qt.AlignHCenter)
         layout.addStretch(3)
         layout.addWidget(hint)
 

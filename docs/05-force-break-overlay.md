@@ -38,6 +38,7 @@ Each tip has a background picture that matches its category. The picture changes
 - The pictures live in `src/pomodoro/assets/backgrounds/<category>/`, named like `water_01.jpg`.
 - If a category has no pictures, a soft colored background is shown instead, so the app always works.
 - A dark layer is drawn over the picture so the white text stays easy to read.
+- The tip stays in a narrow column in the middle, so long tips do not run across the bright parts of a picture.
 - The prompts to create the pictures are in [background-image-prompts.md](background-image-prompts.md).
 
 ## What you cannot do (on purpose)
