@@ -55,7 +55,7 @@ app-pomodoro-timer/
 - [x] Step 1: project setup (repo, license, README)
 - [x] Step 2: timer logic (focus, short break, long break) with tests
 - [x] Step 3: a simple window with Start, Pause and Reset
-- [ ] Step 4: settings screen and modes (Break Reminder, Force Break, Custom)
+- [x] Step 4: settings screen and modes (Break Reminder, Force Break, Custom)
 - [ ] Step 5a: Force Break full-screen overlay with healthy tips (all monitors)
 - [ ] Step 5b: math unlock, daily limit and the Important button
 - [ ] Step 6: creative long-break suggestions
