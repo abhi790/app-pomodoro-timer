@@ -26,6 +26,12 @@ When the 3 math unlocks are used up, the math button goes away. In its place you
 
 While math unlocks are left, Important is hidden, because solving a problem is the better way out: it ends the break completely.
 
+## 3. Emergency exit
+
+At the bottom right of the unlock panel there is always a small **Emergency exit** button. One click ends the break at once, with no math. It is not counted in the daily numbers. The timer waits on Focus, and you press **Start** when ready.
+
+It is a safety net in case you get stuck during a long break. It may be removed or limited later.
+
 ## The daily count
 
 The count is saved in a small file, separate from the settings:
@@ -54,5 +60,5 @@ The real thing happens in **Force Break** mode (choose it in Settings): when a f
 | `src/pomodoro/math_quiz.py` | Makes the problems and checks answers (no windows, has tests) |
 | `src/pomodoro/usage.py` | The daily count, saving, midnight reset (no windows, has tests) |
 | `src/pomodoro/timer_logic.py` | `limit_remaining()` cuts the break to 3 minutes; `skip()` ends it |
-| `src/pomodoro/ui/unlock_panel.py` | The buttons and the quiz on the break screen |
+| `src/pomodoro/ui/unlock_panel.py` | The buttons, the quiz and the Emergency exit on the break screen |
 | `src/pomodoro/ui/main_window.py` | Counts the unlock and changes the timer |

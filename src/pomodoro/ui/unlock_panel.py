@@ -6,9 +6,12 @@ The panel has two pages:
   or, when they are used up, the "Important" button
 * the quiz: a math problem, a box for the answer, Check and Back
 
+Below both pages there is always a small "Emergency exit" button. It ends the
+break at once and is not counted (it is a safety net in case you get stuck).
+
 The panel only shows things and sends signals. It does not count anything and
-does not touch the timer. The main window listens to ``math_solved`` and
-``important_chosen`` and decides what happens.
+does not touch the timer. The main window listens to ``math_solved``,
+``important_chosen`` and ``emergency_chosen`` and decides what happens.
 """
 
 from typing import Optional
@@ -38,6 +41,7 @@ IMPORTANT_MINUTES = IMPORTANT_BREAK_SECONDS // 60
 class UnlockPanel(QWidget):
     math_solved = Signal()
     important_chosen = Signal()
+    emergency_chosen = Signal()
 
     def __init__(self, maker: Optional[ProblemMaker] = None) -> None:
         super().__init__()
@@ -105,15 +109,22 @@ class UnlockPanel(QWidget):
         quiz_layout.addWidget(self._feedback_label)
         quiz_layout.addLayout(buttons)
 
+        # ----- always visible: the emergency exit ---------------------------
+        self._emergency_button = QPushButton("Emergency exit")
+        self._emergency_button.setObjectName("emergencyButton")
+        self._emergency_button.setCursor(Qt.PointingHandCursor)
+
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
         root.setAlignment(Qt.AlignTop)
         root.addWidget(self._menu)
         root.addWidget(self._quiz)
+        root.addWidget(self._emergency_button, alignment=Qt.AlignRight)
         self._quiz.hide()
 
         self._leave_button.clicked.connect(self._show_quiz)
         self._important_button.clicked.connect(self.important_chosen)
+        self._emergency_button.clicked.connect(self.emergency_chosen)
         self._back_button.clicked.connect(self._show_menu)
         self._check_button.clicked.connect(self._on_check)
         self._answer_edit.returnPressed.connect(self._on_check)

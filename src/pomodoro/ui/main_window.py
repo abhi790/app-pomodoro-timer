@@ -59,6 +59,7 @@ class MainWindow(QWidget):
         self._overlay = BreakOverlayManager(self)
         self._overlay.math_unlocked.connect(self._on_math_unlocked)
         self._overlay.important_chosen.connect(self._on_important)
+        self._overlay.emergency_exit.connect(self._on_emergency_exit)
         self._force_break_active = False
 
         self.setWindowTitle("Pomodoro Timer")
@@ -226,6 +227,16 @@ class MainWindow(QWidget):
         self._timer.skip()  # break -> Focus, stopped
         self._end_force_break()
         self._message_label.setText("Break ended early. Ready to focus?")
+        self._refresh()
+
+    def _on_emergency_exit(self) -> None:
+        """Emergency exit: the break ends now and nothing is counted. The timer
+        waits on Focus until the user presses Start."""
+        if not self._force_break_active:
+            return
+        self._timer.skip()  # break -> Focus, stopped
+        self._end_force_break()
+        self._message_label.setText("Emergency exit used. Ready to focus?")
         self._refresh()
 
     def _on_important(self) -> None:

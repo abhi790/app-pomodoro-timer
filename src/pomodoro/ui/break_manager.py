@@ -7,9 +7,10 @@ It also passes on what the user chose on the unlock panel:
 
 * ``math_unlocked``: a math problem was solved, the break should end now
 * ``important_chosen``: the Important button was pressed
+* ``emergency_exit``: the Emergency exit button was pressed, end the break now
 
 The manager does not count anything and does not touch the timer. The main
-window listens to these two signals and decides what happens.
+window listens to these three signals and decides what happens.
 """
 
 from pathlib import Path
@@ -31,6 +32,7 @@ class BreakOverlayManager(QObject):
 
     math_unlocked = Signal()
     important_chosen = Signal()
+    emergency_exit = Signal()
 
     def __init__(
         self,
@@ -141,6 +143,7 @@ class BreakOverlayManager(QObject):
             overlay.set_unlock_state(self._math_left, self._important_used)
             overlay.math_solved.connect(self._on_math_solved)
             overlay.important_chosen.connect(self._on_important)
+            overlay.emergency_chosen.connect(self._on_emergency)
             overlay.showFullScreen()
             self._overlays.append(overlay)
         if self._overlays:
@@ -167,6 +170,12 @@ class BreakOverlayManager(QObject):
             self.mark_important_used()
         else:
             self.important_chosen.emit()
+
+    def _on_emergency(self) -> None:
+        if self._is_test:
+            self.hide()
+        else:
+            self.emergency_exit.emit()
 
     def _on_screens_changed(self, *_args) -> None:
         """A monitor was plugged in or removed while the break is on."""

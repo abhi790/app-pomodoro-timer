@@ -101,6 +101,7 @@ class BreakOverlay(QWidget):
     # Passed on from the unlock panel, so the manager only listens to the window.
     math_solved = Signal()
     important_chosen = Signal()
+    emergency_chosen = Signal()
 
     def __init__(self) -> None:
         super().__init__()
@@ -130,6 +131,7 @@ class BreakOverlay(QWidget):
         self._panel = UnlockPanel()
         self._panel.math_solved.connect(self.math_solved)
         self._panel.important_chosen.connect(self.important_chosen)
+        self._panel.emergency_chosen.connect(self.emergency_chosen)
 
         hint = QLabel(
             "Step away from the screen. It comes back when the break ends.",
