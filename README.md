@@ -56,7 +56,7 @@ app-pomodoro-timer/
 - [x] Step 2: timer logic (focus, short break, long break) with tests
 - [x] Step 3: a simple window with Start, Pause and Reset
 - [x] Step 4: settings screen and modes (Break Reminder, Force Break, Custom)
-- [ ] Step 4a-1: app icon (a tomato) for the window and the taskbar
+- [x] Step 4a-1: app icon (a tomato) for the window and the taskbar
 - [x] Step 5a: Force Break full-screen overlay with healthy tips (all monitors)
 - [ ] Step 5b: math unlock, daily limit and the Important button
 - [ ] Step 6: creative long-break suggestions
