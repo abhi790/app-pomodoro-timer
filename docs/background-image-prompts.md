@@ -16,6 +16,8 @@ src/pomodoro/assets/backgrounds/<category>/<file name>
 
 For example `src/pomodoro/assets/backgrounds/water/water_01.jpg`.
 
+Shortcut: if your files are named `0001_scene1.png` to `0028_scene28.png` (scene numbers in the order of this page), put them all in one folder outside the project and run `python tools\prepare_backgrounds.py <that folder>`. It sorts, resizes and renames them for you.
+
 Tip: make the first picture, and if you like the style, keep using the same chat for the rest so the whole series looks alike.
 
 ## The shared style
