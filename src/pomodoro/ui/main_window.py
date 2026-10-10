@@ -47,7 +47,7 @@ class MainWindow(QWidget):
         self._last_tick = time.monotonic()
 
         self.setWindowTitle("Pomodoro Timer")
-        self.setMinimumSize(360, 360)
+        self.setMinimumSize(520, 520)
         self._build_ui()
 
         self._clock_checker = QTimer(self)
@@ -61,14 +61,17 @@ class MainWindow(QWidget):
 
     def _build_ui(self) -> None:
         self._phase_label = QLabel(alignment=Qt.AlignCenter)
-        self._phase_label.setStyleSheet("font-size: 22px; font-weight: bold;")
+        self._phase_label.setObjectName("phase")
 
         self._clock_label = QLabel(alignment=Qt.AlignCenter)
-        self._clock_label.setStyleSheet("font-size: 72px; font-weight: bold;")
+        self._clock_label.setObjectName("clock")
 
         self._count_label = QLabel(alignment=Qt.AlignCenter)
+        self._count_label.setObjectName("muted")
         self._mode_label = QLabel(alignment=Qt.AlignCenter)
+        self._mode_label.setObjectName("muted")
         self._message_label = QLabel(alignment=Qt.AlignCenter)
+        self._message_label.setObjectName("message")
         self._message_label.setWordWrap(True)
 
         self._toggle_button = QPushButton("Start")
@@ -84,12 +87,12 @@ class MainWindow(QWidget):
             self._reset_button,
             self._settings_button,
         ):
-            button.setMinimumHeight(40)
+            button.setMinimumHeight(52)
             buttons.addWidget(button)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(24, 24, 24, 24)
-        layout.setSpacing(12)
+        layout.setContentsMargins(32, 32, 32, 32)
+        layout.setSpacing(14)
         layout.addWidget(self._phase_label)
         layout.addWidget(self._clock_label)
         layout.addWidget(self._count_label)
@@ -159,9 +162,7 @@ class MainWindow(QWidget):
         clock = format_clock(self._timer.remaining_seconds)
 
         self._phase_label.setText(PHASE_NAME[phase])
-        self._phase_label.setStyleSheet(
-            f"font-size: 22px; font-weight: bold; color: {PHASE_COLOR[phase]};"
-        )
+        self._phase_label.setStyleSheet(f"color: {PHASE_COLOR[phase]};")
         self._clock_label.setText(clock)
         self._count_label.setText(
             f"Pomodoros done: {self._timer.completed_pomodoros}"

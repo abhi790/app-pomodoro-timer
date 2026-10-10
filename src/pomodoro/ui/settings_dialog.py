@@ -30,7 +30,7 @@ class SettingsDialog(QDialog):
     def __init__(self, config: AppConfig, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self.setWindowTitle("Settings")
-        self.setMinimumWidth(360)
+        self.setMinimumWidth(480)
 
         self._custom = config.custom
 
@@ -40,6 +40,7 @@ class SettingsDialog(QDialog):
         self._mode_box.setCurrentIndex(self._mode_box.findData(config.mode))
 
         self._hint = QLabel()
+        self._hint.setObjectName("muted")
         self._hint.setWordWrap(True)
 
         self._focus = self._make_spin(1, 240, " min")
@@ -49,6 +50,8 @@ class SettingsDialog(QDialog):
         self._spins = (self._focus, self._short_break, self._long_break, self._cycle)
 
         form = QFormLayout()
+        form.setVerticalSpacing(14)
+        form.setHorizontalSpacing(20)
         form.addRow("Mode", self._mode_box)
         form.addRow("Focus", self._focus)
         form.addRow("Short break", self._short_break)
@@ -62,7 +65,8 @@ class SettingsDialog(QDialog):
         buttons.rejected.connect(self.reject)
 
         layout = QVBoxLayout(self)
-        layout.setSpacing(12)
+        layout.setContentsMargins(28, 28, 28, 28)
+        layout.setSpacing(18)
         layout.addLayout(form)
         layout.addWidget(self._hint)
         layout.addWidget(buttons)

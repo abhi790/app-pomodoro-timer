@@ -1,0 +1,103 @@
+"""Colors, fonts and sizes for the whole app, kept in one place.
+
+Change the look here and every window follows. Sizes are in pixels.
+"""
+
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import QApplication
+
+FONT_FAMILY = "Segoe UI"
+
+BACKGROUND = "#17171c"
+SURFACE = "#26262f"
+SURFACE_HOVER = "#31313d"
+SURFACE_PRESSED = "#3a3a49"
+BORDER = "#3a3a48"
+TEXT = "#f4f4f7"
+TEXT_MUTED = "#a3a3b3"
+TEXT_DISABLED = "#6c6c7a"
+ACCENT = "#4c8dff"
+
+APP_STYLE = f"""
+QWidget {{
+    background-color: {BACKGROUND};
+    color: {TEXT};
+    font-family: "{FONT_FAMILY}";
+    font-size: 17px;
+}}
+
+QLabel {{
+    background: transparent;
+}}
+
+QLabel#phase {{
+    font-size: 30px;
+    font-weight: 600;
+}}
+
+QLabel#clock {{
+    font-size: 96px;
+    font-weight: 700;
+}}
+
+QLabel#muted {{
+    color: {TEXT_MUTED};
+    font-size: 17px;
+}}
+
+QLabel#message {{
+    font-size: 18px;
+}}
+
+QPushButton {{
+    background-color: {SURFACE};
+    border: 1px solid {BORDER};
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-size: 18px;
+    font-weight: 600;
+}}
+
+QPushButton:hover {{
+    background-color: {SURFACE_HOVER};
+}}
+
+QPushButton:pressed {{
+    background-color: {SURFACE_PRESSED};
+}}
+
+QPushButton:focus {{
+    border: 1px solid {ACCENT};
+}}
+
+QComboBox, QSpinBox {{
+    background-color: {SURFACE};
+    border: 1px solid {BORDER};
+    border-radius: 8px;
+    padding: 6px 12px;
+    min-height: 30px;
+    font-size: 17px;
+}}
+
+QComboBox:hover, QSpinBox:hover {{
+    border: 1px solid {ACCENT};
+}}
+
+QSpinBox:disabled {{
+    color: {TEXT_DISABLED};
+    background-color: {BACKGROUND};
+}}
+
+QComboBox QAbstractItemView {{
+    background-color: {SURFACE};
+    border: 1px solid {BORDER};
+    selection-background-color: {ACCENT};
+    outline: 0;
+}}
+"""
+
+
+def apply_theme(app: QApplication) -> None:
+    """Use the app-wide font and colors."""
+    app.setFont(QFont(FONT_FAMILY, 12))
+    app.setStyleSheet(APP_STYLE)
