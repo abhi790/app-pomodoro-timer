@@ -18,7 +18,9 @@ from PySide6.QtWidgets import (
 )
 
 from pomodoro.formatting import format_clock
+from pomodoro.settings import MODE_NAME, AppConfig, save_config
 from pomodoro.timer_logic import Phase, PomodoroTimer
+from pomodoro.ui.settings_dialog import SettingsDialog
 
 PHASE_NAME = {
     Phase.FOCUS: "Focus",
@@ -38,13 +40,14 @@ CHECK_INTERVAL_MS = 200
 
 
 class MainWindow(QWidget):
-    def __init__(self, timer: Optional[PomodoroTimer] = None) -> None:
+    def __init__(self, config: Optional[AppConfig] = None) -> None:
         super().__init__()
-        self._timer = timer or PomodoroTimer()
+        self._config = config or AppConfig()
+        self._timer = PomodoroTimer(self._config.timer_settings())
         self._last_tick = time.monotonic()
 
         self.setWindowTitle("Pomodoro Timer")
-        self.setMinimumSize(340, 320)
+        self.setMinimumSize(360, 360)
         self._build_ui()
 
         self._clock_checker = QTimer(self)
@@ -64,16 +67,23 @@ class MainWindow(QWidget):
         self._clock_label.setStyleSheet("font-size: 72px; font-weight: bold;")
 
         self._count_label = QLabel(alignment=Qt.AlignCenter)
+        self._mode_label = QLabel(alignment=Qt.AlignCenter)
         self._message_label = QLabel(alignment=Qt.AlignCenter)
         self._message_label.setWordWrap(True)
 
         self._toggle_button = QPushButton("Start")
         self._reset_button = QPushButton("Reset")
+        self._settings_button = QPushButton("Settings")
         self._toggle_button.clicked.connect(self._on_toggle)
         self._reset_button.clicked.connect(self._on_reset)
+        self._settings_button.clicked.connect(self._on_settings)
 
         buttons = QHBoxLayout()
-        for button in (self._toggle_button, self._reset_button):
+        for button in (
+            self._toggle_button,
+            self._reset_button,
+            self._settings_button,
+        ):
             button.setMinimumHeight(40)
             buttons.addWidget(button)
 
@@ -83,6 +93,7 @@ class MainWindow(QWidget):
         layout.addWidget(self._phase_label)
         layout.addWidget(self._clock_label)
         layout.addWidget(self._count_label)
+        layout.addWidget(self._mode_label)
         layout.addWidget(self._message_label)
         layout.addStretch(1)
         layout.addLayout(buttons)
@@ -101,6 +112,18 @@ class MainWindow(QWidget):
     def _on_reset(self) -> None:
         self._timer.reset()
         self._message_label.setText("")
+        self._refresh()
+
+    def _on_settings(self) -> None:
+        dialog = SettingsDialog(self._config, self)
+        if dialog.exec() != SettingsDialog.Accepted:
+            return
+        self._config = dialog.result_config()
+        try:
+            save_config(self._config)
+        except OSError:
+            self._message_label.setText("Could not save your settings.")
+        self._timer.update_settings(self._config.timer_settings())
         self._refresh()
 
     # ----- time passing ----------------------------------------------------
@@ -143,5 +166,6 @@ class MainWindow(QWidget):
         self._count_label.setText(
             f"Pomodoros done: {self._timer.completed_pomodoros}"
         )
+        self._mode_label.setText(f"Mode: {MODE_NAME[self._config.mode]}")
         self._toggle_button.setText("Pause" if self._timer.running else "Start")
         self.setWindowTitle(f"{clock} - {PHASE_NAME[phase]}")
