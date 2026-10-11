@@ -56,6 +56,9 @@ class BreakOverlayManager(QObject):
         self._important_used = False
         self._is_test = False
         self._test_remaining = 0
+        # Problems solved on the test screen. Kept only while the app is open,
+        # never saved, and separate from the real daily count.
+        self._test_math_used = 0
 
         self._keep_on_top = QTimer(self)
         self._keep_on_top.setInterval(KEEP_ON_TOP_MS)
@@ -127,14 +130,17 @@ class BreakOverlayManager(QObject):
     ) -> None:
         """Try the break screen for a while (for testing only).
 
-        Nothing is counted and the timer is not touched: solving a problem
-        just closes the test screen, and Important only hides its button.
+        The real count and the timer are not touched. Solving a problem closes
+        the test screen and counts for the test screen only (until the app is
+        closed), so after 3 solved problems it shows the "no math left" screen
+        with the Important button. ``math_left`` of 0 always shows that screen.
         """
         if self.is_active:
             return
         self._is_test = True
         self._test_remaining = seconds
-        self.show(format_clock(seconds), math_left, long_break)
+        left = max(0, math_left - self._test_math_used) if math_left > 0 else 0
+        self.show(format_clock(seconds), left, long_break)
         self._test_timer.start()
 
     # ----- internals -------------------------------------------------------
@@ -180,6 +186,7 @@ class BreakOverlayManager(QObject):
 
     def _on_math_solved(self) -> None:
         if self._is_test:
+            self._test_math_used += 1
             self.hide()
         else:
             self.math_unlocked.emit()

@@ -46,12 +46,12 @@ If the file is missing or damaged, the app simply starts today's count from zero
 
 ## Trying it
 
-The main window has three test buttons (the third, **Test: long break**, is explained in [06-creative-breaks.md](06-creative-breaks.md)). All of them show the break screen for 60 seconds on every monitor, and nothing is counted:
+The main window has three test buttons (the third, **Test: long break**, is explained in [06-creative-breaks.md](06-creative-breaks.md)). All of them show the break screen for 60 seconds on every monitor, and the real count is not changed:
 
 - **Test overlay:** shows the math button with "3 of 3" unlocks left. Solving a problem closes the test screen.
 - **Test: no math left:** shows the screen as it looks after the 3 unlocks are used up, with the Important button. Pressing it hides the button and shows the message.
 
-The test buttons never count anything, so they always show "3 of 3" (that is on purpose). The real thing happens in both modes (Pomodoro and Custom): when a focus block ends, the break starts by itself and the screen covers the monitors, and every solved problem counts. To try it for real, use Custom with 1 minute of focus.
+The test buttons do not touch the real daily count (nothing is saved). But the test screen keeps its own count while the app is open: after you solve 3 problems on it, **Test overlay** shows the "no math left" screen with the Important button. Closing and opening the app starts that test count again. The real thing happens in both modes (Pomodoro and Custom): when a focus block ends, the break starts by itself and the screen covers the monitors, and every solved problem counts. To try it for real, use Custom with 1 minute of focus.
 
 ## Code
 

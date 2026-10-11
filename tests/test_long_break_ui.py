@@ -89,6 +89,48 @@ class LongBreakManagerTest(unittest.TestCase):
         self.assertEqual(manager._tip.category, IDEA_CATEGORY)
 
 
+class TestScreenCountTest(unittest.TestCase):
+    def _solve_one(self, manager):
+        manager.show_test(60, 3)
+        manager._overlays[0].math_solved.emit()  # closes the test screen
+
+    def test_test_screen_counts_down_and_then_offers_important(self):
+        manager = make_manager()
+        self.addCleanup(manager.hide)
+        lefts = []
+        for _ in range(4):
+            manager.show_test(60, 3)
+            lefts.append(manager._math_left)
+            if manager._math_left == 0:
+                break
+            manager._overlays[0].math_solved.emit()
+        self.assertEqual(lefts, [3, 2, 1, 0])
+        self.assertTrue(manager.is_active)
+
+    def test_test_solves_do_not_reach_the_main_window(self):
+        manager = make_manager()
+        got = []
+        manager.math_unlocked.connect(lambda: got.append(1))
+        self._solve_one(manager)
+        self.assertEqual(got, [])
+        self.assertFalse(manager.is_active)
+
+    def test_no_math_left_button_always_shows_zero(self):
+        manager = make_manager()
+        self.addCleanup(manager.hide)
+        manager.show_test(60, 0)
+        self.assertEqual(manager._math_left, 0)
+
+    def test_a_new_manager_starts_the_test_count_again(self):
+        first = make_manager()
+        for _ in range(3):
+            self._solve_one(first)
+        second = make_manager()
+        self.addCleanup(second.hide)
+        second.show_test(60, 3)
+        self.assertEqual(second._math_left, 3)
+
+
 class SettingsDialogIdeasTest(unittest.TestCase):
     def test_shows_the_saved_ideas_one_per_line(self):
         dialog = SettingsDialog(AppConfig(ideas=("Paint a rock", "Bake bread")))
