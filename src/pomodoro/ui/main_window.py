@@ -64,6 +64,7 @@ class MainWindow(QWidget):
         self._overlay.math_unlocked.connect(self._on_math_unlocked)
         self._overlay.important_chosen.connect(self._on_important)
         self._overlay.emergency_exit.connect(self._on_emergency_exit)
+        self._overlay.test_finished.connect(self._play_alert)
         self._force_break_active = False
 
         self.setWindowTitle("Pomodoro Timer")
@@ -157,19 +158,27 @@ class MainWindow(QWidget):
         """Try the break screen with all math unlocks available."""
         if self._force_break_active:
             return
-        self._overlay.show_test(TEST_OVERLAY_SECONDS, DAILY_MATH_LIMIT)
+        self._show_test(DAILY_MATH_LIMIT)
 
     def _on_test_overlay_no_math(self) -> None:
         """Try the break screen as it looks when the math unlocks are used up."""
         if self._force_break_active:
             return
-        self._overlay.show_test(TEST_OVERLAY_SECONDS, 0)
+        self._show_test(0)
 
     def _on_test_overlay_long(self) -> None:
         """Try the break screen as it looks in a long break (creative ideas)."""
         if self._force_break_active:
             return
-        self._overlay.show_test(TEST_OVERLAY_SECONDS, DAILY_MATH_LIMIT, long_break=True)
+        self._show_test(DAILY_MATH_LIMIT, long_break=True)
+
+    def _show_test(self, math_left: int, long_break: bool = False) -> None:
+        """Open a test break screen. Like the real thing, it plays the alert
+        sound when it opens and again if it runs its whole time (not when you
+        leave it early)."""
+        self._overlay.show_test(TEST_OVERLAY_SECONDS, math_left, long_break)
+        if self._overlay.is_active:
+            self._play_alert()
 
     def _on_settings(self) -> None:
         if self._force_break_active:

@@ -34,6 +34,8 @@ class BreakOverlayManager(QObject):
     math_unlocked = Signal()
     important_chosen = Signal()
     emergency_exit = Signal()
+    # A test screen ran its whole time (it was not closed early).
+    test_finished = Signal()
 
     def __init__(
         self,
@@ -228,5 +230,6 @@ class BreakOverlayManager(QObject):
         self._test_remaining -= 1
         if self._test_remaining <= 0:
             self.hide()
+            self.test_finished.emit()
         else:
             self.update_clock(format_clock(self._test_remaining))

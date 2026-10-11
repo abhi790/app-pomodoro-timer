@@ -7,7 +7,9 @@ The app plays a sound when something ends, so you notice even if the window is h
 - when a **focus block ends** (the break screen opens)
 - when a **break ends** (time to focus again)
 
-It does **not** play when you leave a break early (math problem or Emergency exit), and the test buttons stay silent.
+- when a **test screen** (**Test overlay**, **Test: no math left**, **Test: long break**) opens, and again when it runs its whole 60 seconds, so you can check the sound without waiting for a real break
+
+It does **not** play when you leave a break early (math problem or Emergency exit), and it follows the on/off switch in Settings.
 
 ## The default chime
 
