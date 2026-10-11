@@ -13,7 +13,7 @@ A Pomodoro timer helps you focus. You work for a fixed block of time (a "pomodor
 - **Classic Pomodoro:** 25 minutes of focus and a 5 minute break, for lighter work.
 - **Custom timer:** choose your own focus (up to 45 minutes, for deep focus) and short break (at least 5 minutes).
 - **Long break:** the same in both modes. After every 4 focus blocks you get a 1 hour break.
-- **Force Break in both modes:** every break is a full-screen break on every monitor with healthy tips. There is no "reminder only" mode. You can only leave early by solving a simple math problem (3 times a day), or with the Important button once those are used up. An Emergency exit is always there as a safety net.
+- **Force Break in both modes:** every break is a full-screen break on every monitor with healthy tips. There is no "reminder only" mode. You can only leave early by solving a simple math problem (3 times a day), or with the Important button once those are used up.
 - **Alert sound:** a soft chime when a focus block or a break ends. You can switch it off or choose your own `.wav` sound in Settings.
 - **Creative breaks:** the long break suggests something fun and creative, not studying (sketch, play music, go for a walk, write a poem...). You can add your own ideas in Settings.
 - **Tray icon:** the app lives in the system tray. Hover to see the time left, close the window and the timer keeps running, and use **Quit** in the tray menu to close it for real.
@@ -59,7 +59,8 @@ app-pomodoro-timer/
 - [x] Step 4: settings screen and modes (Pomodoro and Custom, both with Force Break)
 - [x] Step 4a-1: app icon (a tomato) for the window and the taskbar
 - [x] Step 5a: Force Break full-screen overlay with healthy tips (all monitors)
-- [x] Step 5b: math unlock, daily limit, the Important button and the Emergency exit
+- [x] Step 5b: math unlock, daily limit and the Important button
+- [x] Test buttons and the Emergency exit removed (they were only for testing)
 - [x] Step 6: creative long-break suggestions (with your own ideas)
 - [x] Step 7a: alert sound (a default chime, or your own `.wav`)
 - [x] Step 7b: tray icon (the timer keeps running when you close the window)

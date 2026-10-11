@@ -53,10 +53,6 @@ There are no system tricks. Task Manager and Ctrl+Alt+Del still work. You can le
 
 While the break is on, Start, Reset and Settings in the main window are locked.
 
-## Trying it
-
-The main window has three small test buttons. They show the break screen for 60 seconds, then close it. They are only for testing and will be removed later. See [05b-math-unlock.md](05b-math-unlock.md) for what each one shows.
-
 ## Code
 
 | File | What it does |

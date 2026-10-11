@@ -127,7 +127,7 @@ class TrayWindowTest(unittest.TestCase):
         self.end_focus(window)
         window._refresh()
         self.assertFalse(tray.quit_enabled)
-        window._on_emergency_exit()
+        window._on_math_unlocked()  # leaving the break early
         self.assertTrue(tray.quit_enabled)
 
     def test_clicking_the_icon_brings_the_window_back(self):

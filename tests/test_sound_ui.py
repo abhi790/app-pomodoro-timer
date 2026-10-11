@@ -197,41 +197,6 @@ class MainWindowSoundTest(TempDirTest):
         self.end_focus(window)
         before = len(sound.played)
         window._on_math_unlocked()
-        window._on_emergency_exit()
-        self.assertEqual(len(sound.played), before)
-
-    def test_every_test_button_plays_the_sound_when_it_opens(self):
-        for button in ("_on_test_overlay", "_on_test_overlay_no_math",
-                       "_on_test_overlay_long"):
-            window, sound = self.make_window()
-            getattr(window, button)()
-            self.assertEqual(sound.played, [""], button)
-            window._overlay.hide()
-
-    def test_a_test_screen_plays_the_sound_again_when_its_time_is_up(self):
-        window, sound = self.make_window()
-        window._on_test_overlay()
-        window._overlay._test_remaining = 1
-        window._overlay._on_test_tick()  # the last second
-        self.assertEqual(len(sound.played), 2)
-        self.assertFalse(window._overlay.is_active)
-
-    def test_leaving_a_test_screen_early_plays_no_second_sound(self):
-        window, sound = self.make_window()
-        window._on_test_overlay()
-        window._overlay._overlays[0].emergency_chosen.emit()
-        self.assertEqual(len(sound.played), 1)
-
-    def test_the_test_sound_respects_the_switch(self):
-        window, sound = self.make_window(sound_enabled=False)
-        window._on_test_overlay()
-        self.assertEqual(sound.played, [])
-
-    def test_a_test_button_does_nothing_during_a_real_break(self):
-        window, sound = self.make_window()
-        self.end_focus(window)
-        before = len(sound.played)
-        window._on_test_overlay()
         self.assertEqual(len(sound.played), before)
 
 

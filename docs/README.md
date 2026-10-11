@@ -9,7 +9,7 @@ Step-by-step guides for using and building the Pomodoro Timer. One short page is
 - [Step 4a-1: app icon](04a-app-icon.md)
 - [Step 5a: Force Break screen](05-force-break-overlay.md)
   - [Background picture prompts](background-image-prompts.md)
-- [Step 5b: leaving a break early (math, Important, Emergency exit)](05b-math-unlock.md)
+- [Step 5b: leaving a break early (math and Important)](05b-math-unlock.md)
 - [Step 6: creative long breaks](06-creative-breaks.md)
 - [Step 7a: alert sound](07a-sound.md)
 - [Step 7b: tray icon](07b-tray.md)

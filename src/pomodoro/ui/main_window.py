@@ -26,7 +26,7 @@ from pomodoro.ui.break_manager import BreakOverlayManager
 from pomodoro.ui.settings_dialog import SettingsDialog
 from pomodoro.ui.sound_player import AlertSound
 from pomodoro.ui.tray import TrayIcon
-from pomodoro.usage import DAILY_MATH_LIMIT, IMPORTANT_BREAK_SECONDS, UsageTracker
+from pomodoro.usage import IMPORTANT_BREAK_SECONDS, UsageTracker
 
 PHASE_NAME = {
     Phase.FOCUS: "Focus",
@@ -43,10 +43,6 @@ PHASE_COLOR = {
 # How often the screen checks the clock. The timer itself still counts in
 # whole seconds, this just keeps the display from drifting.
 CHECK_INTERVAL_MS = 200
-
-# How long the test buttons show the break screen (long enough to solve a
-# math problem and read a tip or two).
-TEST_OVERLAY_SECONDS = 60
 
 
 class MainWindow(QWidget):
@@ -74,8 +70,6 @@ class MainWindow(QWidget):
         self._overlay.set_custom_ideas(self._config.ideas)
         self._overlay.math_unlocked.connect(self._on_math_unlocked)
         self._overlay.important_chosen.connect(self._on_important)
-        self._overlay.emergency_exit.connect(self._on_emergency_exit)
-        self._overlay.test_finished.connect(self._play_alert)
         self._force_break_active = False
 
         self.setWindowTitle("Pomodoro Timer")
@@ -109,16 +103,9 @@ class MainWindow(QWidget):
         self._toggle_button = QPushButton("Start")
         self._reset_button = QPushButton("Reset")
         self._settings_button = QPushButton("Settings")
-        # Two buttons for trying the break screen. Dev-only, removed later.
-        self._test_button = QPushButton("Test overlay")
-        self._test_no_math_button = QPushButton("Test: no math left")
-        self._test_long_button = QPushButton("Test: long break")
         self._toggle_button.clicked.connect(self._on_toggle)
         self._reset_button.clicked.connect(self._on_reset)
         self._settings_button.clicked.connect(self._on_settings)
-        self._test_button.clicked.connect(self._on_test_overlay)
-        self._test_no_math_button.clicked.connect(self._on_test_overlay_no_math)
-        self._test_long_button.clicked.connect(self._on_test_overlay_long)
 
         buttons = QHBoxLayout()
         for button in (
@@ -139,11 +126,6 @@ class MainWindow(QWidget):
         layout.addWidget(self._message_label)
         layout.addStretch(1)
         layout.addLayout(buttons)
-        test_buttons = QHBoxLayout()
-        test_buttons.addWidget(self._test_button)
-        test_buttons.addWidget(self._test_no_math_button)
-        layout.addLayout(test_buttons)
-        layout.addWidget(self._test_long_button)
 
     # ----- button actions --------------------------------------------------
 
@@ -164,32 +146,6 @@ class MainWindow(QWidget):
         self._timer.reset()
         self._message_label.setText("")
         self._refresh()
-
-    def _on_test_overlay(self) -> None:
-        """Try the break screen with all math unlocks available."""
-        if self._force_break_active:
-            return
-        self._show_test(DAILY_MATH_LIMIT)
-
-    def _on_test_overlay_no_math(self) -> None:
-        """Try the break screen as it looks when the math unlocks are used up."""
-        if self._force_break_active:
-            return
-        self._show_test(0)
-
-    def _on_test_overlay_long(self) -> None:
-        """Try the break screen as it looks in a long break (creative ideas)."""
-        if self._force_break_active:
-            return
-        self._show_test(DAILY_MATH_LIMIT, long_break=True)
-
-    def _show_test(self, math_left: int, long_break: bool = False) -> None:
-        """Open a test break screen. Like the real thing, it plays the alert
-        sound when it opens and again if it runs its whole time (not when you
-        leave it early)."""
-        self._overlay.show_test(TEST_OVERLAY_SECONDS, math_left, long_break)
-        if self._overlay.is_active:
-            self._play_alert()
 
     def _on_settings(self) -> None:
         if self._force_break_active:
@@ -299,16 +255,6 @@ class MainWindow(QWidget):
         self._timer.skip()  # break -> Focus, stopped
         self._end_force_break()
         self._message_label.setText("Break ended early. Ready to focus?")
-        self._refresh()
-
-    def _on_emergency_exit(self) -> None:
-        """Emergency exit: the break ends now and nothing is counted. The timer
-        waits on Focus until the user presses Start."""
-        if not self._force_break_active:
-            return
-        self._timer.skip()  # break -> Focus, stopped
-        self._end_force_break()
-        self._message_label.setText("Emergency exit used. Ready to focus?")
         self._refresh()
 
     def _on_important(self) -> None:

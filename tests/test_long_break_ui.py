@@ -82,53 +82,42 @@ class LongBreakManagerTest(unittest.TestCase):
             self.assertNotEqual(manager._tip.category, IDEA_CATEGORY)
             manager._show_next_tip()
 
-    def test_test_mode_can_show_a_long_break(self):
+class UnlockSignalsTest(unittest.TestCase):
+    """The break screen only passes on what the user chose. Nothing else."""
+
+    def test_a_solved_problem_reaches_the_main_window(self):
         manager = make_manager()
         self.addCleanup(manager.hide)
-        manager.show_test(60, 3, long_break=True)
-        self.assertEqual(manager._tip.category, IDEA_CATEGORY)
-
-
-class TestScreenCountTest(unittest.TestCase):
-    def _solve_one(self, manager):
-        manager.show_test(60, 3)
-        manager._overlays[0].math_solved.emit()  # closes the test screen
-
-    def test_test_screen_counts_down_and_then_offers_important(self):
-        manager = make_manager()
-        self.addCleanup(manager.hide)
-        lefts = []
-        for _ in range(4):
-            manager.show_test(60, 3)
-            lefts.append(manager._math_left)
-            if manager._math_left == 0:
-                break
-            manager._overlays[0].math_solved.emit()
-        self.assertEqual(lefts, [3, 2, 1, 0])
-        self.assertTrue(manager.is_active)
-
-    def test_test_solves_do_not_reach_the_main_window(self):
-        manager = make_manager()
         got = []
         manager.math_unlocked.connect(lambda: got.append(1))
-        self._solve_one(manager)
-        self.assertEqual(got, [])
-        self.assertFalse(manager.is_active)
+        manager.show("10:00", 3)
+        manager._overlays[0].math_solved.emit()
+        self.assertEqual(got, [1])
 
-    def test_no_math_left_button_always_shows_zero(self):
+    def test_the_important_button_reaches_the_main_window(self):
         manager = make_manager()
         self.addCleanup(manager.hide)
-        manager.show_test(60, 0)
-        self.assertEqual(manager._math_left, 0)
+        got = []
+        manager.important_chosen.connect(lambda: got.append(1))
+        manager.show("10:00", 0)
+        manager._overlays[0].important_chosen.emit()
+        self.assertEqual(got, [1])
 
-    def test_a_new_manager_starts_the_test_count_again(self):
-        first = make_manager()
-        for _ in range(3):
-            self._solve_one(first)
-        second = make_manager()
-        self.addCleanup(second.hide)
-        second.show_test(60, 3)
-        self.assertEqual(second._math_left, 3)
+    def test_with_no_math_left_the_screen_offers_important(self):
+        manager = make_manager()
+        self.addCleanup(manager.hide)
+        manager.show("10:00", 0)
+        panel = manager._overlays[0]._panel
+        self.assertFalse(panel._leave_button.isVisibleTo(panel))
+        self.assertTrue(panel._important_button.isVisibleTo(panel))
+
+    def test_there_is_no_emergency_exit_any_more(self):
+        manager = make_manager()
+        self.addCleanup(manager.hide)
+        manager.show("10:00", 3)
+        panel = manager._overlays[0]._panel
+        self.assertFalse(hasattr(panel, "emergency_chosen"))
+        self.assertFalse(hasattr(manager, "emergency_exit"))
 
 
 class SettingsDialogIdeasTest(unittest.TestCase):

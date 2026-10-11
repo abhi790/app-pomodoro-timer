@@ -7,10 +7,9 @@ It also passes on what the user chose on the unlock panel:
 
 * ``math_unlocked``: a math problem was solved, the break should end now
 * ``important_chosen``: the Important button was pressed
-* ``emergency_exit``: the Emergency exit button was pressed, end the break now
 
 The manager does not count anything and does not touch the timer. The main
-window listens to these three signals and decides what happens.
+window listens to these two signals and decides what happens.
 """
 
 from pathlib import Path
@@ -20,7 +19,6 @@ from PySide6.QtCore import QObject, QTimer, Signal
 from PySide6.QtGui import QGuiApplication
 
 from pomodoro.backgrounds import BackgroundPicker
-from pomodoro.formatting import format_clock
 from pomodoro.ideas import IDEA_CATEGORY, IdeaRotator
 from pomodoro.tips import Tip, TipRotator, tip_display_seconds
 from pomodoro.ui.break_overlay import BreakOverlay
@@ -33,9 +31,6 @@ class BreakOverlayManager(QObject):
 
     math_unlocked = Signal()
     important_chosen = Signal()
-    emergency_exit = Signal()
-    # A test screen ran its whole time (it was not closed early).
-    test_finished = Signal()
 
     def __init__(
         self,
@@ -56,11 +51,6 @@ class BreakOverlayManager(QObject):
         self._image: Optional[Path] = None
         self._math_left = 0
         self._important_used = False
-        self._is_test = False
-        self._test_remaining = 0
-        # Problems solved on the test screen. Kept only while the app is open,
-        # never saved, and separate from the real daily count.
-        self._test_math_used = 0
 
         self._keep_on_top = QTimer(self)
         self._keep_on_top.setInterval(KEEP_ON_TOP_MS)
@@ -70,10 +60,6 @@ class BreakOverlayManager(QObject):
         self._tip_timer = QTimer(self)
         self._tip_timer.setSingleShot(True)
         self._tip_timer.timeout.connect(self._show_next_tip)
-
-        self._test_timer = QTimer(self)
-        self._test_timer.setInterval(1000)
-        self._test_timer.timeout.connect(self._on_test_tick)
 
         app = QGuiApplication.instance()
         app.screenAdded.connect(self._on_screens_changed)
@@ -123,27 +109,7 @@ class BreakOverlayManager(QObject):
         """Close all break windows."""
         self._keep_on_top.stop()
         self._tip_timer.stop()
-        self._test_timer.stop()
-        self._is_test = False
         self._close_overlays()
-
-    def show_test(
-        self, seconds: int, math_left: int, long_break: bool = False
-    ) -> None:
-        """Try the break screen for a while (for testing only).
-
-        The real count and the timer are not touched. Solving a problem closes
-        the test screen and counts for the test screen only (until the app is
-        closed), so after 3 solved problems it shows the "no math left" screen
-        with the Important button. ``math_left`` of 0 always shows that screen.
-        """
-        if self.is_active:
-            return
-        self._is_test = True
-        self._test_remaining = seconds
-        left = max(0, math_left - self._test_math_used) if math_left > 0 else 0
-        self.show(format_clock(seconds), left, long_break)
-        self._test_timer.start()
 
     # ----- internals -------------------------------------------------------
 
@@ -168,9 +134,8 @@ class BreakOverlayManager(QObject):
             overlay.set_clock(self._clock_text)
             overlay.set_tip(self._tip, self._image, animate=False)
             overlay.set_unlock_state(self._math_left, self._important_used)
-            overlay.math_solved.connect(self._on_math_solved)
-            overlay.important_chosen.connect(self._on_important)
-            overlay.emergency_chosen.connect(self._on_emergency)
+            overlay.math_solved.connect(self.math_unlocked)
+            overlay.important_chosen.connect(self.important_chosen)
             overlay.showFullScreen()
             self._overlays.append(overlay)
         if self._overlays:
@@ -185,25 +150,6 @@ class BreakOverlayManager(QObject):
     def _apply_unlock_state(self) -> None:
         for overlay in self._overlays:
             overlay.set_unlock_state(self._math_left, self._important_used)
-
-    def _on_math_solved(self) -> None:
-        if self._is_test:
-            self._test_math_used += 1
-            self.hide()
-        else:
-            self.math_unlocked.emit()
-
-    def _on_important(self) -> None:
-        if self._is_test:
-            self.mark_important_used()
-        else:
-            self.important_chosen.emit()
-
-    def _on_emergency(self) -> None:
-        if self._is_test:
-            self.hide()
-        else:
-            self.emergency_exit.emit()
 
     def _on_screens_changed(self, *_args) -> None:
         """A monitor was plugged in or removed while the break is on."""
@@ -225,11 +171,3 @@ class BreakOverlayManager(QObject):
             overlay.raise_()
         if self._overlays and not any(o.isActiveWindow() for o in self._overlays):
             self._overlays[0].activateWindow()
-
-    def _on_test_tick(self) -> None:
-        self._test_remaining -= 1
-        if self._test_remaining <= 0:
-            self.hide()
-            self.test_finished.emit()
-        else:
-            self.update_clock(format_clock(self._test_remaining))

@@ -149,12 +149,6 @@ QPushButton:focus {{
     border: 1px solid {ACCENT};
 }}
 
-QPushButton#emergencyButton {{
-    font-size: 16px;
-    padding: 6px 14px;
-    color: #c9c9d6;
-}}
-
 QComboBox, QSpinBox {{
     background-color: {SURFACE};
     border: 1px solid {BORDER};

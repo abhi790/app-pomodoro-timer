@@ -33,7 +33,7 @@ To change the built-in list, open `src/pomodoro/ideas.py` and edit `CREATIVE_IDE
 
 ## Trying it
 
-The main window has a third test button, **Test: long break**. It shows the break screen for 60 seconds on every monitor, the way a long break looks, with an idea first. Nothing is counted. Like the other two test buttons, it is only for testing and will be removed later.
+The test buttons are gone. A long break comes after every 4 focus blocks, so it takes a while to see one for real. Your ideas show up there, first in the break, then taking turns with the healthy tips.
 
 ## Code
 

@@ -26,11 +26,9 @@ When the 3 math unlocks are used up, the math button goes away. In its place you
 
 While math unlocks are left, Important is hidden, because solving a problem is the better way out: it ends the break completely.
 
-## 3. Emergency exit
+## No emergency exit
 
-At the bottom right of the unlock panel there is always a small **Emergency exit** button. One click ends the break at once, with no math. It is not counted in the daily numbers. The timer waits on Focus, and you press **Start** when ready.
-
-It is a safety net in case you get stuck during a long break. It may be removed or limited later.
+There used to be an **Emergency exit** button, kept only while the app was being tested. It is gone now. Solving a math problem (or Important, once those are used up) is the way out of a break early. If you ever get really stuck, Task Manager still works, because the app does no system tricks (see [05-force-break-overlay.md](05-force-break-overlay.md)).
 
 ## The daily count
 
@@ -46,12 +44,7 @@ If the file is missing or damaged, the app simply starts today's count from zero
 
 ## Trying it
 
-The main window has three test buttons (the third, **Test: long break**, is explained in [06-creative-breaks.md](06-creative-breaks.md)). All of them show the break screen for 60 seconds on every monitor, and the real count is not changed:
-
-- **Test overlay:** shows the math button with "3 of 3" unlocks left. Solving a problem closes the test screen.
-- **Test: no math left:** shows the screen as it looks after the 3 unlocks are used up, with the Important button. Pressing it hides the button and shows the message.
-
-The test buttons do not touch the real daily count (nothing is saved). But the test screen keeps its own count while the app is open: after you solve 3 problems on it, **Test overlay** shows the "no math left" screen with the Important button. Closing and opening the app starts that test count again. The real thing happens in both modes (Pomodoro and Custom): when a focus block ends, the break starts by itself and the screen covers the monitors, and every solved problem counts. To try it for real, use Custom with 1 minute of focus.
+The test buttons are gone. The real thing happens in both modes (Pomodoro and Custom): when a focus block ends, the break starts by itself and the screen covers the monitors, and every solved problem counts. To try it quickly, use Custom with 1 minute of focus.
 
 ## Code
 
@@ -60,5 +53,5 @@ The test buttons do not touch the real daily count (nothing is saved). But the t
 | `src/pomodoro/math_quiz.py` | Makes the problems and checks answers (no windows, has tests) |
 | `src/pomodoro/usage.py` | The daily count, saving, midnight reset (no windows, has tests) |
 | `src/pomodoro/timer_logic.py` | `limit_remaining()` cuts the break to 3 minutes; `skip()` ends it |
-| `src/pomodoro/ui/unlock_panel.py` | The buttons, the quiz and the Emergency exit on the break screen |
+| `src/pomodoro/ui/unlock_panel.py` | The buttons and the quiz on the break screen |
 | `src/pomodoro/ui/main_window.py` | Counts the unlock and changes the timer |
