@@ -1,6 +1,6 @@
 # Step 5a: Force Break screen
 
-In **Force Break** mode, a full-screen break window covers every monitor when your focus time ends.
+In both modes (Pomodoro and Custom Timer), a full-screen break window covers every monitor when your focus time ends.
 
 ## What happens
 
@@ -9,7 +9,7 @@ In **Force Break** mode, a full-screen break window covers every monitor when yo
 3. The window shows the break countdown, a healthy tip and a matching background picture.
 4. When the break ends, the windows close by themselves. The timer waits on Focus until you press **Start**.
 
-Break Reminder and Custom Timer modes do not open this screen.
+There is no mode without this screen: every break is a full-screen break.
 
 ## Healthy tips
 

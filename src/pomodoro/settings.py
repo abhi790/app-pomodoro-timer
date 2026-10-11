@@ -2,12 +2,18 @@
 
 No windows in this file, so it is easy to test. The user picks a mode:
 
-* Break Reminder: 25 min focus, 5 min short break
-* Force Break:    45 min focus, 10 min short break
-* Custom:         your own focus (1 to 45 min) and short break (5 min or more)
+* Pomodoro: 25 min focus, 5 min short break
+* Custom:   your own focus (1 to 45 min) and short break (5 min or more)
 
-The long break is the same in every mode: 60 minutes, once after every 4 focus
+Both modes end every focus block with the full-screen break (Force Break), so
+there is no "reminder only" mode.
+
+The long break is the same in both modes: 60 minutes, once after every 4 focus
 blocks. Custom cannot change it.
+
+Settings files from older versions can name two modes that no longer exist:
+"break_reminder" becomes Pomodoro and "force_break" becomes Custom with
+45 min focus and a 10 min short break (what Force Break used to be).
 """
 
 import json
@@ -22,8 +28,7 @@ from pomodoro.timer_logic import TimerSettings
 
 
 class Mode(Enum):
-    BREAK_REMINDER = "break_reminder"
-    FORCE_BREAK = "force_break"
+    POMODORO = "pomodoro"
     CUSTOM = "custom"
 
 
@@ -54,25 +59,21 @@ def limit_custom(settings: TimerSettings) -> TimerSettings:
 
 
 MODE_NAME = {
-    Mode.BREAK_REMINDER: "Break Reminder",
-    Mode.FORCE_BREAK: "Force Break",
+    Mode.POMODORO: "Pomodoro",
     Mode.CUSTOM: "Custom Timer",
 }
 
 PRESETS = {
-    Mode.BREAK_REMINDER: TimerSettings(
+    Mode.POMODORO: TimerSettings(
         focus_minutes=25,
         short_break_minutes=5,
         long_break_minutes=60,
         pomodoros_before_long_break=4,
     ),
-    Mode.FORCE_BREAK: TimerSettings(
-        focus_minutes=45,
-        short_break_minutes=10,
-        long_break_minutes=60,
-        pomodoros_before_long_break=4,
-    ),
 }
+
+# What the old Force Break mode used to be (see the top of this file).
+_OLD_FORCE_BREAK_CUSTOM = TimerSettings(focus_minutes=45, short_break_minutes=10)
 
 
 @dataclass(frozen=True)
@@ -105,10 +106,19 @@ class AppConfig:
     def from_dict(cls, data: dict) -> "AppConfig":
         """Build a config from saved data. Raises ValueError, TypeError or
         KeyError if the data is not valid. Older files without ``ideas`` are
-        fine: they just have no ideas of your own."""
+        fine: they just have no ideas of your own. The two old modes are
+        converted (see the top of this file)."""
+        name = data["mode"]
+        custom = TimerSettings(**data["custom"])
+        if name == "break_reminder":
+            mode = Mode.POMODORO
+        elif name == "force_break":
+            mode, custom = Mode.CUSTOM, _OLD_FORCE_BREAK_CUSTOM
+        else:
+            mode = Mode(name)
         return cls(
-            mode=Mode(data["mode"]),
-            custom=TimerSettings(**data["custom"]),
+            mode=mode,
+            custom=custom,
             ideas=clean_ideas(data.get("ideas", ())),
         )
 

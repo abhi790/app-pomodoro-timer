@@ -28,16 +28,16 @@ from pomodoro.settings import (
 from pomodoro.timer_logic import TimerSettings
 
 MODE_HINT = {
-    Mode.BREAK_REMINDER: "A gentle reminder when it is time to rest.",
-    Mode.FORCE_BREAK: (
-        "Breaks take over every screen. You can leave early by solving a "
-        "math problem, a few times a day."
+    Mode.POMODORO: (
+        "The classic: 25 min focus, 5 min break. Every break takes over the "
+        f"screen. After every {POMODOROS_BEFORE_LONG_BREAK} focus blocks you "
+        f"get a {LONG_BREAK_MINUTES} min long break."
     ),
     Mode.CUSTOM: (
         f"Set your own focus (1 to {MAX_FOCUS_MINUTES} min) and short break "
-        f"({MIN_BREAK_MINUTES} min or more). The long break is the same in every "
-        f"mode: {LONG_BREAK_MINUTES} min after every {POMODOROS_BEFORE_LONG_BREAK} "
-        "focus blocks."
+        f"({MIN_BREAK_MINUTES} min or more). Every break takes over the screen. "
+        f"The long break is the same as in Pomodoro: {LONG_BREAK_MINUTES} min "
+        f"after every {POMODOROS_BEFORE_LONG_BREAK} focus blocks."
     ),
 }
 

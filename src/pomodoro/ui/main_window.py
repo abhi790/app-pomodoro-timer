@@ -18,8 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from pomodoro.formatting import format_clock
-from pomodoro.ideas import IdeaRotator
-from pomodoro.settings import MODE_NAME, AppConfig, Mode, save_config
+from pomodoro.settings import MODE_NAME, AppConfig, save_config
 from pomodoro.timer_logic import Phase, PomodoroTimer
 from pomodoro.ui.break_manager import BreakOverlayManager
 from pomodoro.ui.settings_dialog import SettingsDialog
@@ -58,7 +57,6 @@ class MainWindow(QWidget):
         self._timer = PomodoroTimer(self._config.timer_settings())
         self._last_tick = time.monotonic()
         self._overlay = BreakOverlayManager(self)
-        self._ideas = IdeaRotator(custom=self._config.ideas)
         self._overlay.set_custom_ideas(self._config.ideas)
         self._overlay.math_unlocked.connect(self._on_math_unlocked)
         self._overlay.important_chosen.connect(self._on_important)
@@ -181,7 +179,6 @@ class MainWindow(QWidget):
             save_config(self._config)
         except OSError:
             self._message_label.setText("Could not save your settings.")
-        self._ideas = IdeaRotator(custom=self._config.ideas)
         self._overlay.set_custom_ideas(self._config.ideas)
         self._timer.update_settings(self._config.timer_settings())
         self._refresh()
@@ -202,30 +199,22 @@ class MainWindow(QWidget):
         self._refresh()
 
     def _announce(self, finished: Phase) -> None:
+        """A block ended. After focus, the break always starts by itself and
+        covers the screens (in both modes). After a break, wait for Start."""
         if finished is Phase.FOCUS:
-            if self._config.mode is Mode.FORCE_BREAK:
-                self._start_force_break()
-                return
-            if self._timer.phase is Phase.LONG_BREAK:
-                text = (
-                    "Great work! Time for your long break.\n"
-                    f"Try something creative: {self._ideas.next_idea()}"
-                )
-            else:
-                text = "Focus done! Take a short break."
-        else:
-            self._end_force_break()
-            text = "Break is over. Ready to focus?"
-        self._message_label.setText(text)
+            self._start_force_break()
+            return
+        self._end_force_break()
+        self._message_label.setText("Break is over. Ready to focus?")
         QApplication.alert(self)  # flash the taskbar icon
 
     def _start_force_break(self) -> None:
-        """Focus is done in Force Break mode: start the break and cover the
-        screens. The overlay closes by itself when the break ends."""
+        """Focus is done: start the break and cover the screens. The overlay
+        closes by itself when the break ends."""
         self._timer.start()
         self._last_tick = time.monotonic()
         self._force_break_active = True
-        self._message_label.setText("Force Break: time to rest.")
+        self._message_label.setText("Time to rest.")
         self._overlay.show(
             format_clock(self._timer.remaining_seconds),
             self._usage.math_left,

@@ -51,7 +51,7 @@ The main window has three test buttons (the third, **Test: long break**, is expl
 - **Test overlay:** shows the math button with "3 of 3" unlocks left. Solving a problem closes the test screen.
 - **Test: no math left:** shows the screen as it looks after the 3 unlocks are used up, with the Important button. Pressing it hides the button and shows the message.
 
-The real thing happens in **Force Break** mode (choose it in Settings): when a focus block ends, the break starts by itself and the screen covers the monitors.
+The test buttons never count anything, so they always show "3 of 3" (that is on purpose). The real thing happens in both modes (Pomodoro and Custom): when a focus block ends, the break starts by itself and the screen covers the monitors, and every solved problem counts. To try it for real, use Custom with 1 minute of focus.
 
 ## Code
 

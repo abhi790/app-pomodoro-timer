@@ -12,9 +12,8 @@ A Pomodoro timer helps you focus. You work for a fixed block of time (a "pomodor
 
 - **Classic Pomodoro:** 25 minutes of focus and a 5 minute break, for lighter work.
 - **Custom timer:** choose your own focus (up to 45 minutes, for deep focus) and short break (at least 5 minutes).
-- **Long break:** the same in every mode. After every 4 focus blocks you get a 1 hour break.
-- **Break Reminder mode (planned):** a gentle reminder when it is time to rest.
-- **Force Break mode:** a full-screen break on every monitor with healthy tips. You can only leave early by solving a simple math problem (3 times a day), or with the Important button once those are used up. An Emergency exit is always there as a safety net.
+- **Long break:** the same in both modes. After every 4 focus blocks you get a 1 hour break.
+- **Force Break in both modes:** every break is a full-screen break on every monitor with healthy tips. There is no "reminder only" mode. You can only leave early by solving a simple math problem (3 times a day), or with the Important button once those are used up. An Emergency exit is always there as a safety net.
 - **Creative breaks:** the long break suggests something fun and creative, not studying (sketch, play music, go for a walk, write a poem...). You can add your own ideas in Settings.
 - **Light and simple:** no account, no internet, no ads.
 
@@ -55,7 +54,7 @@ app-pomodoro-timer/
 - [x] Step 1: project setup (repo, license, README)
 - [x] Step 2: timer logic (focus, short break, long break) with tests
 - [x] Step 3: a simple window with Start, Pause and Reset
-- [x] Step 4: settings screen and modes (Break Reminder, Force Break, Custom)
+- [x] Step 4: settings screen and modes (Pomodoro and Custom, both with Force Break)
 - [x] Step 4a-1: app icon (a tomato) for the window and the taskbar
 - [x] Step 5a: Force Break full-screen overlay with healthy tips (all monitors)
 - [x] Step 5b: math unlock, daily limit, the Important button and the Emergency exit

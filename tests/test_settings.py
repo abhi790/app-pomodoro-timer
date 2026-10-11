@@ -23,15 +23,13 @@ class AppConfigTest(unittest.TestCase):
         self.assertEqual(config.mode, Mode.CUSTOM)
         self.assertEqual(config.timer_settings(), TimerSettings())
 
-    def test_break_reminder_preset(self):
-        s = AppConfig(mode=Mode.BREAK_REMINDER).timer_settings()
+    def test_pomodoro_preset_is_25_and_5(self):
+        s = AppConfig(mode=Mode.POMODORO).timer_settings()
         self.assertEqual(s.focus_minutes, 25)
         self.assertEqual(s.short_break_minutes, 5)
 
-    def test_force_break_preset(self):
-        s = AppConfig(mode=Mode.FORCE_BREAK).timer_settings()
-        self.assertEqual(s.focus_minutes, 45)
-        self.assertEqual(s.short_break_minutes, 10)
+    def test_there_are_only_two_modes(self):
+        self.assertEqual(set(Mode), {Mode.POMODORO, Mode.CUSTOM})
 
     def test_custom_uses_the_custom_times(self):
         custom = TimerSettings(focus_minutes=40, short_break_minutes=10)
@@ -40,8 +38,8 @@ class AppConfigTest(unittest.TestCase):
 
     def test_presets_do_not_touch_custom_times(self):
         custom = TimerSettings(focus_minutes=40)
-        config = AppConfig(mode=Mode.FORCE_BREAK, custom=custom)
-        self.assertEqual(config.timer_settings(), PRESETS[Mode.FORCE_BREAK])
+        config = AppConfig(mode=Mode.POMODORO, custom=custom)
+        self.assertEqual(config.timer_settings(), PRESETS[Mode.POMODORO])
         self.assertEqual(config.custom, custom)
 
 
@@ -110,7 +108,7 @@ class SaveAndLoadTest(unittest.TestCase):
 
     def test_round_trip(self):
         config = AppConfig(
-            mode=Mode.FORCE_BREAK,
+            mode=Mode.POMODORO,
             custom=TimerSettings(focus_minutes=40, long_break_minutes=30),
         )
         save_config(config, self.path)
@@ -131,6 +129,25 @@ class SaveAndLoadTest(unittest.TestCase):
         self.assertEqual(loaded.custom.short_break_minutes, 5)
         self.assertEqual(loaded.custom.long_break_minutes, 60)
         self.assertEqual(loaded.custom.pomodoros_before_long_break, 4)
+
+    def test_old_break_reminder_file_becomes_pomodoro(self):
+        self.path.parent.mkdir(parents=True)
+        data = AppConfig().to_dict()
+        data["mode"] = "break_reminder"
+        self.path.write_text(json.dumps(data), encoding="utf-8")
+        loaded = load_config(self.path)
+        self.assertEqual(loaded.mode, Mode.POMODORO)
+        self.assertEqual(loaded.timer_settings().focus_minutes, 25)
+
+    def test_old_force_break_file_becomes_custom_45_and_10(self):
+        self.path.parent.mkdir(parents=True)
+        data = AppConfig().to_dict()
+        data["mode"] = "force_break"
+        self.path.write_text(json.dumps(data), encoding="utf-8")
+        loaded = load_config(self.path)
+        self.assertEqual(loaded.mode, Mode.CUSTOM)
+        self.assertEqual(loaded.timer_settings().focus_minutes, 45)
+        self.assertEqual(loaded.timer_settings().short_break_minutes, 10)
 
     def test_missing_file_gives_defaults(self):
         self.assertEqual(load_config(self.path), AppConfig())
@@ -166,11 +183,11 @@ class SaveAndLoadTest(unittest.TestCase):
 
     def test_old_file_without_ideas_still_loads(self):
         self.path.parent.mkdir(parents=True)
-        data = AppConfig(mode=Mode.FORCE_BREAK).to_dict()
+        data = AppConfig(mode=Mode.POMODORO).to_dict()
         del data["ideas"]
         self.path.write_text(json.dumps(data), encoding="utf-8")
         loaded = load_config(self.path)
-        self.assertEqual(loaded.mode, Mode.FORCE_BREAK)
+        self.assertEqual(loaded.mode, Mode.POMODORO)
         self.assertEqual(loaded.ideas, ())
 
     def test_saved_ideas_are_tidied_when_loaded(self):

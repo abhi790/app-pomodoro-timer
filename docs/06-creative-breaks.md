@@ -4,12 +4,7 @@ A long break is the time to do something fun and creative, not something that fe
 
 ## Where you see the ideas
 
-**Force Break mode.** When a long break starts, the full-screen break window shows a creative idea first, under the title **BE CREATIVE**, on a purple background. After that, an idea and a healthy tip take turns, so you still get the water, posture and eye tips. Short breaks only show the healthy tips, as before.
-
-**Break Reminder and Custom Timer modes.** There is no full-screen window, so the idea appears in the message in the main window when the long break begins:
-
-> Great work! Time for your long break.
-> Try something creative: Draw a comic strip with three panels about your morning.
+**Both modes (Pomodoro and Custom Timer).** When a long break starts, the full-screen break window shows a creative idea first, under the title **BE CREATIVE**, on a purple background. After that, an idea and a healthy tip take turns, so you still get the water, posture and eye tips. Short breaks only show the healthy tips, as before.
 
 ## Your own ideas
 
@@ -49,7 +44,7 @@ The main window has a third test button, **Test: long break**. It shows the brea
 | `src/pomodoro/ui/settings_dialog.py` | The box for your own ideas |
 | `src/pomodoro/ui/break_manager.py` | In a long break, an idea and a tip take turns |
 | `src/pomodoro/ui/break_overlay.py` | The "Be creative" title and the purple background |
-| `src/pomodoro/ui/main_window.py` | Starts the long break, shows the idea message in the other modes |
+| `src/pomodoro/ui/main_window.py` | Starts the long break with the idea |
 | `tests/test_ideas.py`, `tests/test_long_break_ui.py` | Tests for the rules above |
 
 ## Later
