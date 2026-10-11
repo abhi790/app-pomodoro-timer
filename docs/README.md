@@ -12,3 +12,4 @@ Step-by-step guides for using and building the Pomodoro Timer. One short page is
 - [Step 5b: leaving a break early (math, Important, Emergency exit)](05b-math-unlock.md)
 - [Step 6: creative long breaks](06-creative-breaks.md)
 - [Step 7a: alert sound](07a-sound.md)
+- [Step 7b: tray icon](07b-tray.md)

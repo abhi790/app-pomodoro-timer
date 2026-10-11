@@ -8,6 +8,7 @@ import time
 from typing import Optional
 
 from PySide6.QtCore import Qt, QTimer
+from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
@@ -20,9 +21,11 @@ from PySide6.QtWidgets import (
 from pomodoro.formatting import format_clock
 from pomodoro.settings import MODE_NAME, AppConfig, save_config
 from pomodoro.timer_logic import Phase, PomodoroTimer
+from pomodoro.tray_logic import HIDE, can_quit, close_action, tray_tooltip
 from pomodoro.ui.break_manager import BreakOverlayManager
 from pomodoro.ui.settings_dialog import SettingsDialog
 from pomodoro.ui.sound_player import AlertSound
+from pomodoro.ui.tray import TrayIcon
 from pomodoro.usage import DAILY_MATH_LIMIT, IMPORTANT_BREAK_SECONDS, UsageTracker
 
 PHASE_NAME = {
@@ -52,11 +55,19 @@ class MainWindow(QWidget):
         config: Optional[AppConfig] = None,
         usage: Optional[UsageTracker] = None,
         sound: Optional[AlertSound] = None,
+        tray: Optional[TrayIcon] = None,
     ) -> None:
         super().__init__()
         self._config = config or AppConfig()
         self._usage = usage or UsageTracker()
         self._sound = sound or AlertSound(self)
+        # The tray icon. The window hides there when you close it, and the
+        # timer keeps running. Quit (in the tray menu) really closes the app.
+        self._tray = tray or TrayIcon(self)
+        self._tray.show_requested.connect(self._show_from_tray)
+        self._tray.quit_requested.connect(self._quit_app)
+        self._quitting = False
+        self._told_about_tray = False
         self._timer = PomodoroTimer(self._config.timer_settings())
         self._last_tick = time.monotonic()
         self._overlay = BreakOverlayManager(self)
@@ -195,6 +206,39 @@ class MainWindow(QWidget):
         self._timer.update_settings(self._config.timer_settings())
         self._refresh()
 
+    # ----- the tray --------------------------------------------------------
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        """The close button hides the window to the tray. The timer keeps
+        running. (Without a tray, or after Quit, the app really closes.)"""
+        if close_action(self._tray.available, self._quitting) == HIDE:
+            event.ignore()
+            self.hide()
+            if not self._told_about_tray:
+                self._told_about_tray = True
+                self._tray.notify(
+                    "Pomodoro Timer",
+                    "Still running in the tray. Right-click the tomato to quit.",
+                )
+            return
+        self._tray.hide()
+        event.accept()
+
+    def _show_from_tray(self) -> None:
+        """Bring the window back (also when it is minimized)."""
+        self.showNormal()
+        self.raise_()
+        self.activateWindow()
+
+    def _quit_app(self) -> None:
+        """Quit from the tray menu. Not during a Force Break (the menu item is
+        greyed out then, and this check is a second safety)."""
+        if not can_quit(self._force_break_active):
+            return
+        self._quitting = True
+        self.close()
+        QApplication.quit()
+
     # ----- time passing ----------------------------------------------------
 
     def _on_clock_check(self) -> None:
@@ -220,6 +264,8 @@ class MainWindow(QWidget):
         self._end_force_break()
         self._message_label.setText("Break is over. Ready to focus?")
         QApplication.alert(self)  # flash the taskbar icon
+        if not self.isVisible():  # hidden in the tray: say it there
+            self._tray.notify("Break is over", "Ready to focus?")
 
     def _play_alert(self) -> None:
         """The sound for the end of a focus block or a break (if it is on)."""
@@ -290,5 +336,9 @@ class MainWindow(QWidget):
         self._mode_label.setText(f"Mode: {MODE_NAME[self._config.mode]}")
         self._toggle_button.setText("Pause" if self._timer.running else "Start")
         self.setWindowTitle(f"{clock} - {PHASE_NAME[phase]}")
+        self._tray.set_tooltip(
+            tray_tooltip(PHASE_NAME[phase], clock, self._timer.running)
+        )
+        self._tray.set_quit_enabled(can_quit(self._force_break_active))
         if self._force_break_active:
             self._overlay.update_clock(clock)
