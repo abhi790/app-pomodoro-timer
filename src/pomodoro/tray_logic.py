@@ -6,7 +6,7 @@ The app lives in the system tray (the little icons next to the clock):
 * pressing the window's close button hides the window to the tray, the timer
   keeps running
 * the tray menu has "Quit", which really closes the app. Quit is not allowed
-  during a Force Break, just like Start, Reset and Settings are locked then.
+  during a Force Break or while the pause screen is up (see ``lock_rules.py``).
 * if this computer has no system tray, close works the old way (the app quits),
   so the window can never disappear with no way to bring it back
 """
@@ -41,6 +41,7 @@ def close_action(tray_available: bool, quitting: bool) -> str:
     return HIDE
 
 
-def can_quit(break_active: bool) -> bool:
-    """Quit from the tray is not allowed while a Force Break is on."""
-    return not break_active
+def can_quit(break_active: bool, pause_cover_active: bool = False) -> bool:
+    """Quit from the tray is not allowed while a Force Break or the pause
+    screen is on (they would be a way around the rules)."""
+    return not (break_active or pause_cover_active)

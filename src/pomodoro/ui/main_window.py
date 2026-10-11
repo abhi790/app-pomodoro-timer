@@ -19,10 +19,12 @@ from PySide6.QtWidgets import (
 )
 
 from pomodoro.formatting import format_clock
+from pomodoro.lock_rules import controls_enabled
 from pomodoro.settings import MODE_NAME, AppConfig, save_config
 from pomodoro.timer_logic import Phase, PomodoroTimer
 from pomodoro.tray_logic import HIDE, can_quit, close_action, tray_tooltip
 from pomodoro.ui.break_manager import BreakOverlayManager
+from pomodoro.ui.pause_overlay import PauseCoverManager
 from pomodoro.ui.settings_dialog import SettingsDialog
 from pomodoro.ui.sound_player import AlertSound
 from pomodoro.ui.tray import TrayIcon
@@ -71,6 +73,10 @@ class MainWindow(QWidget):
         self._overlay.math_unlocked.connect(self._on_math_unlocked)
         self._overlay.important_chosen.connect(self._on_important)
         self._force_break_active = False
+        # Pause covers the screens with Run and Stop (Stop needs a math problem).
+        self._pause_cover = PauseCoverManager(self)
+        self._pause_cover.run_chosen.connect(self._on_run_chosen)
+        self._pause_cover.stop_confirmed.connect(self._on_stop_confirmed)
 
         self.setWindowTitle("Pomodoro Timer")
         self.setMinimumSize(520, 640)
@@ -129,26 +135,60 @@ class MainWindow(QWidget):
 
     # ----- button actions --------------------------------------------------
 
+    def _controls_enabled(self) -> bool:
+        """Reset and Settings only work while the timer is stopped and no
+        break screen or pause screen is up (see ``lock_rules.py``)."""
+        return controls_enabled(
+            self._timer.running,
+            self._force_break_active,
+            self._pause_cover.is_active,
+        )
+
     def _on_toggle(self) -> None:
-        if self._force_break_active:
+        if self._force_break_active or self._pause_cover.is_active:
             return
         if self._timer.running:
+            # Pause is not a quiet pause: the pause screen covers the monitors
+            # and you choose Run or Stop there.
             self._timer.pause()
+            self._pause_cover.show(
+                format_clock(self._timer.remaining_seconds), self._usage.math_left
+            )
         else:
             self._timer.start()
             self._last_tick = time.monotonic()
             self._message_label.setText("")
         self._refresh()
 
+    def _on_run_chosen(self) -> None:
+        """Run on the pause screen: carry on from where the clock stopped."""
+        if not self._pause_cover.is_active:
+            return
+        self._pause_cover.hide()
+        self._timer.start()
+        self._last_tick = time.monotonic()
+        self._refresh()
+
+    def _on_stop_confirmed(self) -> None:
+        """A math problem was solved on the pause screen: this focus block is
+        given up (it does not count) and the timer waits for Start."""
+        if not self._pause_cover.is_active:
+            return
+        self._usage.record_math()
+        self._pause_cover.hide()
+        self._timer.abandon_focus()
+        self._message_label.setText("Focus stopped. Ready when you are.")
+        self._refresh()
+
     def _on_reset(self) -> None:
-        if self._force_break_active:
+        if not self._controls_enabled():
             return
         self._timer.reset()
         self._message_label.setText("")
         self._refresh()
 
     def _on_settings(self) -> None:
-        if self._force_break_active:
+        if not self._controls_enabled():
             return
         dialog = SettingsDialog(self._config, self, self._sound)
         if dialog.exec() != SettingsDialog.Accepted:
@@ -187,9 +227,9 @@ class MainWindow(QWidget):
         self.activateWindow()
 
     def _quit_app(self) -> None:
-        """Quit from the tray menu. Not during a Force Break (the menu item is
-        greyed out then, and this check is a second safety)."""
-        if not can_quit(self._force_break_active):
+        """Quit from the tray menu. Not during a Force Break or the pause screen
+        (the menu item is greyed out then, and this check is a second safety)."""
+        if not can_quit(self._force_break_active, self._pause_cover.is_active):
             return
         self._quitting = True
         self.close()
@@ -285,6 +325,11 @@ class MainWindow(QWidget):
         self._tray.set_tooltip(
             tray_tooltip(PHASE_NAME[phase], clock, self._timer.running)
         )
-        self._tray.set_quit_enabled(can_quit(self._force_break_active))
+        self._tray.set_quit_enabled(
+            can_quit(self._force_break_active, self._pause_cover.is_active)
+        )
+        controls_on = self._controls_enabled()
+        self._reset_button.setEnabled(controls_on)
+        self._settings_button.setEnabled(controls_on)
         if self._force_break_active:
             self._overlay.update_clock(clock)

@@ -24,8 +24,8 @@ The countdown also appears in the window title (for example `29:59 - Focus`), so
 
 | Button | What it does |
 |---|---|
-| Start / Pause | Runs or pauses the countdown |
-| Reset | Goes back to a fresh first focus block, count at zero |
+| Start / Pause | Runs the countdown. Pause covers the screen with the pause screen (Run or Stop), see [08-pause-and-locks.md](08-pause-and-locks.md) |
+| Reset | Goes back to a fresh first focus block, count at zero. Locked while the timer runs |
 
 When a block ends, the timer moves to the next block and waits. Press Start when you are ready.
 

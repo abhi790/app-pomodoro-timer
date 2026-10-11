@@ -16,6 +16,7 @@ A Pomodoro timer helps you focus. You work for a fixed block of time (a "pomodor
 - **Force Break in both modes:** every break is a full-screen break on every monitor with healthy tips. There is no "reminder only" mode. You can only leave early by solving a simple math problem (3 times a day), or with the Important button once those are used up.
 - **Alert sound:** a soft chime when a focus block or a break ends. You can switch it off or choose your own `.wav` sound in Settings.
 - **Creative breaks:** the long break suggests something fun and creative, not studying (sketch, play music, go for a walk, write a poem...). You can add your own ideas in Settings.
+- **A real Pomodoro, not a toy:** while the timer runs, Reset and Settings are locked. Pause covers the screen with Run and Stop. Stop needs a math problem (one of the 3 daily unlocks) and the interrupted block does not count. With no unlocks left, you can only Run.
 - **Tray icon:** the app lives in the system tray. Hover to see the time left, close the window and the timer keeps running, and use **Quit** in the tray menu to close it for real.
 - **Light and simple:** no account, no internet, no ads.
 
@@ -36,7 +37,7 @@ python -m pip install -r requirements.txt
 python run.py
 ```
 
-A window opens with a countdown. Press **Start** to begin focusing, **Pause** to stop for a moment, and **Reset** to start over.
+A window opens with a countdown. Press **Start** to begin focusing. Once it runs, **Reset** and **Settings** are locked, like a real Pomodoro. **Pause** covers the screen, where you choose **Run** (carry on) or **Stop** (give the block up, after a math problem).
 
 ## Project layout
 
@@ -61,6 +62,7 @@ app-pomodoro-timer/
 - [x] Step 5a: Force Break full-screen overlay with healthy tips (all monitors)
 - [x] Step 5b: math unlock, daily limit and the Important button
 - [x] Test buttons and the Emergency exit removed (they were only for testing)
+- [x] Step 8: Reset and Settings locked while running, Pause screen with Run and Stop (math)
 - [x] Step 6: creative long-break suggestions (with your own ideas)
 - [x] Step 7a: alert sound (a default chime, or your own `.wav`)
 - [x] Step 7b: tray icon (the timer keeps running when you close the window)

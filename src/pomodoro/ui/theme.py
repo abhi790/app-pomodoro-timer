@@ -149,6 +149,12 @@ QPushButton:focus {{
     border: 1px solid {ACCENT};
 }}
 
+QPushButton:disabled {{
+    color: {TEXT_DISABLED};
+    background-color: {BACKGROUND};
+    border: 1px solid {SURFACE};
+}}
+
 QComboBox, QSpinBox {{
     background-color: {SURFACE};
     border: 1px solid {BORDER};

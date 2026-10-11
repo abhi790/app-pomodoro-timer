@@ -107,6 +107,18 @@ class PomodoroTimer:
         self._running = False
         self._go_to_next_phase(count_focus=False)
 
+    def abandon_focus(self) -> None:
+        """Give up the current focus block (Stop on the pause screen).
+
+        Like the classic Pomodoro rule, an interrupted pomodoro does not count:
+        the timer goes back to a fresh, stopped focus block. Pomodoros that
+        were already finished stay counted. Does nothing during a break.
+        """
+        if self._phase is not Phase.FOCUS:
+            return
+        self._running = False
+        self._remaining = self._settings.duration_seconds(Phase.FOCUS)
+
     def limit_remaining(self, seconds: int) -> None:
         """Make the current block end sooner.
 
