@@ -111,6 +111,23 @@ QLineEdit#overlayAnswer {{
     font-weight: 600;
 }}
 
+QCheckBox {{
+    spacing: 10px;
+}}
+
+QCheckBox::indicator {{
+    width: 20px;
+    height: 20px;
+    border: 1px solid {BORDER};
+    border-radius: 5px;
+    background-color: {SURFACE};
+}}
+
+QCheckBox::indicator:checked {{
+    background-color: {ACCENT};
+    border: 1px solid {ACCENT};
+}}
+
 QPushButton {{
     background-color: {SURFACE};
     border: 1px solid {BORDER};

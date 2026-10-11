@@ -22,6 +22,7 @@ from pomodoro.settings import MODE_NAME, AppConfig, save_config
 from pomodoro.timer_logic import Phase, PomodoroTimer
 from pomodoro.ui.break_manager import BreakOverlayManager
 from pomodoro.ui.settings_dialog import SettingsDialog
+from pomodoro.ui.sound_player import AlertSound
 from pomodoro.usage import DAILY_MATH_LIMIT, IMPORTANT_BREAK_SECONDS, UsageTracker
 
 PHASE_NAME = {
@@ -50,10 +51,12 @@ class MainWindow(QWidget):
         self,
         config: Optional[AppConfig] = None,
         usage: Optional[UsageTracker] = None,
+        sound: Optional[AlertSound] = None,
     ) -> None:
         super().__init__()
         self._config = config or AppConfig()
         self._usage = usage or UsageTracker()
+        self._sound = sound or AlertSound(self)
         self._timer = PomodoroTimer(self._config.timer_settings())
         self._last_tick = time.monotonic()
         self._overlay = BreakOverlayManager(self)
@@ -171,7 +174,7 @@ class MainWindow(QWidget):
     def _on_settings(self) -> None:
         if self._force_break_active:
             return
-        dialog = SettingsDialog(self._config, self)
+        dialog = SettingsDialog(self._config, self, self._sound)
         if dialog.exec() != SettingsDialog.Accepted:
             return
         self._config = dialog.result_config()
@@ -201,12 +204,18 @@ class MainWindow(QWidget):
     def _announce(self, finished: Phase) -> None:
         """A block ended. After focus, the break always starts by itself and
         covers the screens (in both modes). After a break, wait for Start."""
+        self._play_alert()
         if finished is Phase.FOCUS:
             self._start_force_break()
             return
         self._end_force_break()
         self._message_label.setText("Break is over. Ready to focus?")
         QApplication.alert(self)  # flash the taskbar icon
+
+    def _play_alert(self) -> None:
+        """The sound for the end of a focus block or a break (if it is on)."""
+        if self._config.sound_enabled:
+            self._sound.play(self._config.sound_file)
 
     def _start_force_break(self) -> None:
         """Focus is done: start the break and cover the screens. The overlay

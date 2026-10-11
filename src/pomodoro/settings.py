@@ -84,6 +84,10 @@ class AppConfig:
     custom: TimerSettings = TimerSettings()
     # The user's own long-break ideas, added to the built-in ones.
     ideas: Tuple[str, ...] = ()
+    # The alert sound: on or off, and the path of your own .wav file
+    # (empty means the built-in chime).
+    sound_enabled: bool = True
+    sound_file: str = ""
 
     def __post_init__(self) -> None:
         # Custom times always stay inside the limits, whoever built the config.
@@ -100,14 +104,17 @@ class AppConfig:
             "mode": self.mode.value,
             "custom": asdict(self.custom),
             "ideas": list(self.ideas),
+            "sound_enabled": self.sound_enabled,
+            "sound_file": self.sound_file,
         }
 
     @classmethod
     def from_dict(cls, data: dict) -> "AppConfig":
         """Build a config from saved data. Raises ValueError, TypeError or
         KeyError if the data is not valid. Older files without ``ideas`` are
-        fine: they just have no ideas of your own. The two old modes are
-        converted (see the top of this file)."""
+        fine: they just have no ideas of your own, and the sound is on with the
+        default chime. The two old modes are converted (see the top of this
+        file)."""
         name = data["mode"]
         custom = TimerSettings(**data["custom"])
         if name == "break_reminder":
@@ -116,10 +123,16 @@ class AppConfig:
             mode, custom = Mode.CUSTOM, _OLD_FORCE_BREAK_CUSTOM
         else:
             mode = Mode(name)
+        sound_enabled = data.get("sound_enabled", True)
+        sound_file = data.get("sound_file", "")
+        if not isinstance(sound_enabled, bool) or not isinstance(sound_file, str):
+            raise TypeError("sound settings are not valid")
         return cls(
             mode=mode,
             custom=custom,
             ideas=clean_ideas(data.get("ideas", ())),
+            sound_enabled=sound_enabled,
+            sound_file=sound_file.strip(),
         )
 
 
