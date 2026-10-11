@@ -61,6 +61,13 @@ QLabel#overlayClock {{
     font-weight: 700;
 }}
 
+/* The pause screen also has a tip and two buttons, so its clock is smaller
+   than on the break screen. That way everything fits on a small laptop. */
+QLabel#pauseClock {{
+    font-size: 120px;
+    font-weight: 700;
+}}
+
 QLabel#overlayCategory {{
     color: #d8d8e2;
     font-size: 24px;
@@ -153,6 +160,25 @@ QPushButton:disabled {{
     color: {TEXT_DISABLED};
     background-color: {BACKGROUND};
     border: 1px solid {SURFACE};
+}}
+
+/* Buttons on the pause screen sit on top of a picture, so they are a little
+   see-through: you still see the picture through them. */
+QPushButton#overlayButton {{
+    background-color: rgba(38, 38, 47, 120);
+    border: 1px solid rgba(255, 255, 255, 60);
+}}
+
+QPushButton#overlayButton:hover {{
+    background-color: rgba(60, 60, 78, 170);
+}}
+
+QPushButton#overlayButton:pressed {{
+    background-color: rgba(80, 80, 104, 200);
+}}
+
+QPushButton#overlayButton:focus {{
+    border: 1px solid {ACCENT};
 }}
 
 QComboBox, QSpinBox {{

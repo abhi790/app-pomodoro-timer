@@ -1,4 +1,5 @@
 import os
+import random
 import tempfile
 import unittest
 from pathlib import Path
@@ -7,12 +8,17 @@ from unittest import mock
 # Run without a real screen if nobody chose a Qt platform already.
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import QApplication
 
+from pomodoro.backgrounds import BackgroundPicker
 from pomodoro.settings import AppConfig, Mode
 from pomodoro.timer_logic import Phase
+from pomodoro.tips import CATEGORY_TITLE, HEALTHY_TIPS, TipRotator
 from pomodoro.ui.main_window import MainWindow
+from pomodoro.ui.pause_overlay import PauseCoverManager, PauseOverlay
+from pomodoro.ui.theme import apply_theme
 from pomodoro.usage import DAILY_MATH_LIMIT, UsageTracker
 from tests.test_tray_ui import FakeSound, FakeTray
 
@@ -252,6 +258,90 @@ class PauseWindowTest(unittest.TestCase):
         window._on_toggle()
         self.assertFalse(window._pause_cover.is_active)
         self.assertTrue(window._timer.running)
+
+
+class PauseTipsTest(unittest.TestCase):
+    """The pause screen shows the same healthy tips as the break screen."""
+
+    def make(self) -> PauseCoverManager:
+        manager = PauseCoverManager(
+            rotator=TipRotator(rng=random.Random(1)),
+            picker=BackgroundPicker(rng=random.Random(1)),
+        )
+        self.addCleanup(manager.hide)
+        self.keep_alive = manager
+        return manager
+
+    def test_a_tip_with_its_category_is_shown(self):
+        manager = self.make()
+        manager.show("20:00", 3)
+        overlay = manager._overlays[0]
+        self.assertEqual(overlay._tip_label.text(), manager._tip.text)
+        self.assertEqual(
+            overlay._category_label.text(),
+            CATEGORY_TITLE[manager._tip.category].upper(),
+        )
+
+    def test_the_tip_is_a_healthy_tip(self):
+        manager = self.make()
+        manager.show("20:00", 3)
+        self.assertIn(manager._tip, HEALTHY_TIPS)
+
+    def test_every_monitor_shows_the_same_tip(self):
+        manager = self.make()
+        manager.show("20:00", 3)
+        for _ in range(3):
+            manager._show_next_tip()
+            texts = {o._tip_label.text() for o in manager._overlays}
+            self.assertEqual(texts, {manager._tip.text})
+
+    def test_the_tips_take_turns(self):
+        manager = self.make()
+        manager.show("20:00", 3)
+        seen = [manager._tip.text]
+        for _ in range(5):
+            manager._show_next_tip()
+            seen.append(manager._tip.text)
+        self.assertEqual(len(set(seen)), len(seen))
+
+    def test_a_tip_timer_runs_while_the_screen_is_up_and_stops_after(self):
+        manager = self.make()
+        manager.show("20:00", 3)
+        self.assertTrue(manager._tip_timer.isActive())
+        manager.hide()
+        self.assertFalse(manager._tip_timer.isActive())
+
+    def test_a_new_pause_starts_with_a_new_tip(self):
+        manager = self.make()
+        manager.show("20:00", 3)
+        first = manager._tip.text
+        manager.hide()
+        manager.show("20:00", 3)
+        self.assertNotEqual(manager._tip.text, first)
+
+    def test_the_buttons_are_the_see_through_kind(self):
+        manager = self.make()
+        manager.show("20:00", 3)
+        overlay = manager._overlays[0]
+        for button in (overlay._run_button, overlay._stop_button,
+                       overlay._back_button, overlay._check_button):
+            self.assertEqual(button.objectName(), "overlayButton")
+
+    def test_no_tip_is_cut_off_on_a_small_laptop_screen(self):
+        overlay = PauseOverlay()
+        self.addCleanup(overlay.close_for_real)
+        overlay.resize(1366, 768)
+        overlay.show()
+        apply_theme(_app)
+        for tip in HEALTHY_TIPS:
+            overlay.set_tip(tip, None, animate=False)
+            _app.processEvents()
+            label = overlay._tip_label
+            wanted = label.fontMetrics().boundingRect(
+                0, 0, label.width(), 10000,
+                int(Qt.TextWordWrap | Qt.AlignCenter), tip.text,
+            ).height()
+            self.assertLessEqual(wanted, label.height(), tip.text)
 
 
 if __name__ == "__main__":

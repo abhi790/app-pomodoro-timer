@@ -7,18 +7,30 @@ which has two choices:
 * **Stop:** give this focus block up. This needs a math problem (one of the 3
   daily math unlocks). With none left, Stop is not offered, only Run.
 
+While you decide, the screen shows the same healthy tips and background
+pictures as the break screen, so a pause is a small moment of rest too.
+
 ``PauseOverlay`` is one full-screen window. ``PauseCoverManager`` opens one per
-monitor and keeps them on top, the same way the break screen does. Like the
-break screen, it has no close button, ignores Alt+F4 and Esc, and only shows
-things and sends signals. The main window decides what happens.
+monitor, keeps them on top and rotates the tips, the same way the break screen
+does. Like the break screen, it has no close button, ignores Alt+F4 and Esc,
+and only shows things and sends signals. The main window decides what happens.
 """
 
+from pathlib import Path
 from typing import Optional
 
-from PySide6.QtCore import QObject, QRectF, QTimer, Qt, Signal
-from PySide6.QtGui import QCloseEvent, QGuiApplication, QIntValidator, QKeyEvent
-from PySide6.QtGui import QPainter, QPaintEvent
+from PySide6.QtCore import QObject, QRectF, QTimer, Qt, QVariantAnimation, Signal
+from PySide6.QtGui import (
+    QCloseEvent,
+    QGuiApplication,
+    QIntValidator,
+    QKeyEvent,
+    QPainter,
+    QPaintEvent,
+    QPixmap,
+)
 from PySide6.QtWidgets import (
+    QGraphicsOpacityEffect,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -27,16 +39,21 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from pomodoro.backgrounds import BackgroundPicker
 from pomodoro.lock_rules import can_stop
 from pomodoro.math_quiz import Problem, ProblemMaker, is_correct
+from pomodoro.tips import CATEGORY_TITLE, Tip, TipRotator, tip_display_seconds
+from pomodoro.ui.break_overlay import FADE_MS, TIP_MAX_WIDTH, Scene
 from pomodoro.usage import DAILY_MATH_LIMIT
-from pomodoro.ui.break_overlay import Scene
 
 KEEP_ON_TOP_MS = 500
 PANEL_WIDTH = 520
 # The menu and the math page have about the same height, so the clock above
 # does not jump when you switch between them.
-PANEL_MIN_HEIGHT = 250
+PANEL_MIN_HEIGHT = 230
+# The tip column: wide enough for 3 or 4 lines, and tall enough for 4 lines.
+TIP_MIN_WIDTH = 780
+TIP_MIN_HEIGHT = 190
 
 
 class PauseOverlay(QWidget):
@@ -49,6 +66,8 @@ class PauseOverlay(QWidget):
         super().__init__()
         self._allow_close = False
         self._scene = Scene("")
+        self._previous: Optional[Scene] = None
+        self._blend = 1.0
         self._maker = maker or ProblemMaker()
         self._problem: Optional[Problem] = None
         self._math_left = 0
@@ -59,7 +78,18 @@ class PauseOverlay(QWidget):
         title = QLabel("Paused", alignment=Qt.AlignCenter)
         title.setObjectName("overlayTitle")
         self._clock_label = QLabel(alignment=Qt.AlignCenter)
-        self._clock_label.setObjectName("overlayClock")
+        self._clock_label.setObjectName("pauseClock")
+
+        # The healthy tip, like on the break screen. The column is wide enough
+        # that a tip takes at most 3 or 4 lines, so nothing is cut off.
+        self._category_label = QLabel(alignment=Qt.AlignCenter)
+        self._category_label.setObjectName("overlayCategory")
+        self._tip_label = QLabel(alignment=Qt.AlignCenter)
+        self._tip_label.setObjectName("overlayTip")
+        self._tip_label.setWordWrap(True)
+        self._tip_label.setMinimumWidth(TIP_MIN_WIDTH)
+        self._tip_label.setMaximumWidth(TIP_MAX_WIDTH)
+        self._tip_label.setMinimumHeight(TIP_MIN_HEIGHT)
 
         # ----- page 1: Run and Stop -----------------------------------------
         self._menu = QWidget()
@@ -69,8 +99,6 @@ class PauseOverlay(QWidget):
         self._status_label.setWordWrap(True)
         self._run_button = QPushButton("Run (carry on focusing)")
         self._stop_button = QPushButton("Stop (solve a math problem)")
-        for button in (self._run_button, self._stop_button):
-            button.setMinimumHeight(52)
         self._run_button.setDefault(True)
         menu_layout = QVBoxLayout(self._menu)
         menu_layout.setContentsMargins(0, 0, 0, 0)
@@ -95,8 +123,6 @@ class PauseOverlay(QWidget):
         self._feedback_label.setWordWrap(True)
         self._back_button = QPushButton("Back")
         self._check_button = QPushButton("Check")
-        for button in (self._back_button, self._check_button):
-            button.setMinimumHeight(52)
         buttons = QHBoxLayout()
         buttons.setSpacing(12)
         buttons.addWidget(self._back_button)
@@ -108,6 +134,17 @@ class PauseOverlay(QWidget):
         quiz_layout.addWidget(self._answer_edit)
         quiz_layout.addWidget(self._feedback_label)
         quiz_layout.addLayout(buttons)
+
+        # The buttons sit on top of a picture, so they are a little see-through
+        # (see "overlayButton" in theme.py).
+        for button in (
+            self._run_button,
+            self._stop_button,
+            self._back_button,
+            self._check_button,
+        ):
+            button.setObjectName("overlayButton")
+            button.setMinimumHeight(52)
 
         panel = QWidget()
         panel.setObjectName("overlayPanel")
@@ -121,14 +158,30 @@ class PauseOverlay(QWidget):
         self._quiz.hide()
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(80, 30, 80, 30)
-        layout.setSpacing(18)
+        layout.setContentsMargins(60, 16, 60, 16)
+        layout.setSpacing(8)
         layout.addStretch(1)
         layout.addWidget(title)
         layout.addWidget(self._clock_label)
-        layout.addSpacing(24)
+        layout.addWidget(self._category_label)
+        layout.addWidget(self._tip_label, alignment=Qt.AlignHCenter)
+        layout.addStretch(1)
         layout.addWidget(panel, alignment=Qt.AlignHCenter)
-        layout.addStretch(2)
+        layout.addStretch(1)
+
+        # Soft changes when a new tip arrives: the picture cross-fades and the
+        # text fades in (the same as on the break screen).
+        self._text_effects = []
+        for label in (self._category_label, self._tip_label):
+            effect = QGraphicsOpacityEffect(label)
+            label.setGraphicsEffect(effect)
+            self._text_effects.append(effect)
+        self._fade = QVariantAnimation(self)
+        self._fade.setDuration(FADE_MS)
+        self._fade.setStartValue(0.0)
+        self._fade.setEndValue(1.0)
+        self._fade.valueChanged.connect(self._on_fade)
+        self._fade.finished.connect(self._on_fade_finished)
 
         self._run_button.clicked.connect(self.run_chosen)
         self._stop_button.clicked.connect(self._show_quiz)
@@ -142,6 +195,33 @@ class PauseOverlay(QWidget):
 
     def set_clock(self, text: str) -> None:
         self._clock_label.setText(text)
+
+    def set_tip(
+        self,
+        tip: Tip,
+        image_path: Optional[Path] = None,
+        animate: bool = True,
+    ) -> None:
+        """Show a healthy tip with its picture (a soft colored background if
+        the category has no picture)."""
+        self._category_label.setText(CATEGORY_TITLE.get(tip.category, "").upper())
+        self._tip_label.setText(tip.text)
+
+        image = QPixmap(str(image_path)) if image_path else None
+        new_scene = Scene(tip.category, image)
+        self._fade.stop()
+        if animate:
+            self._previous = self._scene
+            self._scene = new_scene
+            self._blend = 0.0
+            self._set_text_opacity(0.0)
+            self._fade.start()
+        else:
+            self._previous = None
+            self._scene = new_scene
+            self._blend = 1.0
+            self._set_text_opacity(1.0)
+        self.update()
 
     def set_math_left(self, math_left: int) -> None:
         """Say how many math unlocks are left today. With none, there is no
@@ -163,6 +243,7 @@ class PauseOverlay(QWidget):
     def close_for_real(self) -> None:
         """Close the window. Only the manager calls this."""
         self._allow_close = True
+        self._fade.stop()
         self.close()
 
     # ----- the pages -------------------------------------------------------
@@ -202,8 +283,26 @@ class PauseOverlay(QWidget):
 
     def paintEvent(self, event: QPaintEvent) -> None:
         painter = QPainter(self)
-        self._scene.paint(painter, QRectF(self.rect()))
+        rect = QRectF(self.rect())
+        if self._previous is not None and self._blend < 1.0:
+            self._previous.paint(painter, rect)
+            painter.setOpacity(self._blend)
+        self._scene.paint(painter, rect)
         painter.end()
+
+    def _on_fade(self, value) -> None:
+        self._blend = float(value)
+        self._set_text_opacity(self._blend)
+        self.update()
+
+    def _on_fade_finished(self) -> None:
+        self._previous = None
+        self._blend = 1.0
+        self.update()
+
+    def _set_text_opacity(self, value: float) -> None:
+        for effect in self._text_effects:
+            effect.setOpacity(value)
 
     def closeEvent(self, event: QCloseEvent) -> None:
         if self._allow_close:
@@ -216,7 +315,8 @@ class PauseOverlay(QWidget):
 
 
 class PauseCoverManager(QObject):
-    """Shows the pause screen on all monitors and keeps it on top.
+    """Shows the pause screen on all monitors, keeps it on top and rotates
+    the healthy tips (the same tip with the same picture on every monitor).
 
     ``run_chosen``: Run was pressed, the timer should carry on.
     ``stop_confirmed``: a math problem was solved, the focus block is given up.
@@ -226,15 +326,29 @@ class PauseCoverManager(QObject):
     run_chosen = Signal()
     stop_confirmed = Signal()
 
-    def __init__(self, parent: Optional[QObject] = None) -> None:
+    def __init__(
+        self,
+        parent: Optional[QObject] = None,
+        rotator: Optional[TipRotator] = None,
+        picker: Optional[BackgroundPicker] = None,
+    ) -> None:
         super().__init__(parent)
+        self._rotator = rotator or TipRotator()
+        self._picker = picker or BackgroundPicker()
         self._overlays: list = []
         self._clock_text = ""
         self._math_left = 0
+        self._tip: Optional[Tip] = None
+        self._image: Optional[Path] = None
 
         self._keep_on_top = QTimer(self)
         self._keep_on_top.setInterval(KEEP_ON_TOP_MS)
         self._keep_on_top.timeout.connect(self._bring_to_front)
+
+        # One tip at a time. A longer tip stays longer (10 to 20 seconds).
+        self._tip_timer = QTimer(self)
+        self._tip_timer.setSingleShot(True)
+        self._tip_timer.timeout.connect(self._show_next_tip)
 
         app = QGuiApplication.instance()
         app.screenAdded.connect(self._on_screens_changed)
@@ -250,18 +364,31 @@ class PauseCoverManager(QObject):
         if self.is_active:
             return
         self._math_left = math_left
+        self._choose_tip()
         self._open_overlays()
         self._keep_on_top.start()
+        self._schedule_next_tip()
 
     def hide(self) -> None:
         """Close all pause screens."""
         self._keep_on_top.stop()
-        overlays, self._overlays = self._overlays, []
-        for overlay in overlays:
-            overlay.close_for_real()
-            overlay.deleteLater()
+        self._tip_timer.stop()
+        self._close_overlays()
 
     # ----- internals -------------------------------------------------------
+
+    def _choose_tip(self) -> None:
+        self._tip = self._rotator.next_tip()
+        self._image = self._picker.pick(self._tip.category)
+
+    def _schedule_next_tip(self) -> None:
+        self._tip_timer.start(tip_display_seconds(self._tip.text) * 1000)
+
+    def _show_next_tip(self) -> None:
+        self._choose_tip()
+        for overlay in self._overlays:
+            overlay.set_tip(self._tip, self._image, animate=True)
+        self._schedule_next_tip()
 
     def _open_overlays(self) -> None:
         for screen in QGuiApplication.screens():
@@ -269,6 +396,7 @@ class PauseCoverManager(QObject):
             overlay.setScreen(screen)
             overlay.setGeometry(screen.geometry())
             overlay.set_clock(self._clock_text)
+            overlay.set_tip(self._tip, self._image, animate=False)
             overlay.set_math_left(self._math_left)
             overlay.run_chosen.connect(self.run_chosen)
             overlay.math_solved.connect(self.stop_confirmed)
@@ -277,12 +405,17 @@ class PauseCoverManager(QObject):
         if self._overlays:
             self._overlays[0].activateWindow()
 
+    def _close_overlays(self) -> None:
+        overlays, self._overlays = self._overlays, []
+        for overlay in overlays:
+            overlay.close_for_real()
+            overlay.deleteLater()
+
     def _on_screens_changed(self, *_args) -> None:
         """A monitor was plugged in or removed while the pause screen is on."""
         if self.is_active:
-            self.hide()
+            self._close_overlays()
             self._open_overlays()
-            self._keep_on_top.start()
 
     def _bring_to_front(self) -> None:
         """If the user clicked away, bring the pause screens back."""
