@@ -4,14 +4,15 @@ No windows in this file, so it is easy to test. The user picks a mode:
 
 * Break Reminder: 25 min focus, 5 min short break
 * Force Break:    45 min focus, 10 min short break
-* Custom:         any times the user chooses
+* Custom:         your own focus (1 to 45 min) and short break (5 min or more)
 
-Every mode has a long break of 60 minutes after 4 pomodoros by default.
+The long break is the same in every mode: 60 minutes, once after every 4 focus
+blocks. Custom cannot change it.
 """
 
 import json
 import os
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from enum import Enum
 from pathlib import Path
 from typing import Optional, Tuple
@@ -24,6 +25,32 @@ class Mode(Enum):
     BREAK_REMINDER = "break_reminder"
     FORCE_BREAK = "force_break"
     CUSTOM = "custom"
+
+
+# Limits for the Custom timer: a focus block is at most 45 minutes (longer is
+# not focus any more) and a short break is at least 5 minutes.
+MAX_FOCUS_MINUTES = 45
+MIN_BREAK_MINUTES = 5
+
+# The long break is common to every mode: once after every 4 focus blocks.
+LONG_BREAK_MINUTES = 60
+POMODOROS_BEFORE_LONG_BREAK = 4
+
+
+def limit_custom(settings: TimerSettings) -> TimerSettings:
+    """Bring Custom times inside the limits.
+
+    Focus is cut to 45 minutes, the short break is raised to 5 minutes, and the
+    long break is the common one (60 minutes after 4 focus blocks). Old
+    settings files from before these limits are fixed this way when loaded.
+    """
+    return replace(
+        settings,
+        focus_minutes=min(settings.focus_minutes, MAX_FOCUS_MINUTES),
+        short_break_minutes=max(settings.short_break_minutes, MIN_BREAK_MINUTES),
+        long_break_minutes=LONG_BREAK_MINUTES,
+        pomodoros_before_long_break=POMODOROS_BEFORE_LONG_BREAK,
+    )
 
 
 MODE_NAME = {
@@ -56,6 +83,10 @@ class AppConfig:
     custom: TimerSettings = TimerSettings()
     # The user's own long-break ideas, added to the built-in ones.
     ideas: Tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        # Custom times always stay inside the limits, whoever built the config.
+        object.__setattr__(self, "custom", limit_custom(self.custom))
 
     def timer_settings(self) -> TimerSettings:
         """The times to use right now, based on the chosen mode."""

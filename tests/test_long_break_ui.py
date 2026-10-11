@@ -8,7 +8,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtWidgets import QApplication
 
 from pomodoro.ideas import CREATIVE_IDEAS, IDEA_CATEGORY, IdeaRotator
-from pomodoro.settings import AppConfig
+from pomodoro.settings import AppConfig, Mode
 from pomodoro.tips import TipRotator
 from pomodoro.ui.break_manager import BreakOverlayManager
 from pomodoro.ui.settings_dialog import SettingsDialog
@@ -107,6 +107,33 @@ class SettingsDialogIdeasTest(unittest.TestCase):
         dialog = SettingsDialog(AppConfig(ideas=("Paint a rock",)))
         dialog._ideas_edit.setPlainText("")
         self.assertEqual(dialog.result_config().ideas, ())
+
+    def test_focus_and_break_boxes_follow_the_limits(self):
+        dialog = SettingsDialog(AppConfig())
+        self.assertEqual(dialog._focus.maximum(), 45)
+        self.assertEqual(dialog._short_break.minimum(), 5)
+
+    def test_long_break_is_shown_but_cannot_be_changed(self):
+        for mode in Mode:
+            dialog = SettingsDialog(AppConfig(mode=mode))
+            self.assertFalse(dialog._long_break.isEnabled(), mode)
+            self.assertFalse(dialog._cycle.isEnabled(), mode)
+            self.assertEqual(dialog._long_break.value(), 60, mode)
+            self.assertEqual(dialog._cycle.value(), 4, mode)
+
+    def test_custom_focus_and_short_break_can_be_changed(self):
+        dialog = SettingsDialog(AppConfig(mode=Mode.CUSTOM))
+        self.assertTrue(dialog._focus.isEnabled())
+        self.assertTrue(dialog._short_break.isEnabled())
+        dialog._focus.setValue(40)
+        dialog._short_break.setValue(8)
+        result = dialog.result_config().timer_settings()
+        self.assertEqual((result.focus_minutes, result.short_break_minutes), (40, 8))
+
+    def test_a_focus_over_45_cannot_be_typed_in(self):
+        dialog = SettingsDialog(AppConfig(mode=Mode.CUSTOM))
+        dialog._focus.setValue(90)
+        self.assertEqual(dialog.result_config().timer_settings().focus_minutes, 45)
 
     def test_mode_and_times_are_still_returned(self):
         config = AppConfig()

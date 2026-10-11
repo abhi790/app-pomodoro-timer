@@ -10,9 +10,9 @@ A Pomodoro timer helps you focus. You work for a fixed block of time (a "pomodor
 
 ## What this app does (and will do)
 
-- **Customizable times:** choose your own focus length, short break and long break.
-- **Focus blocks:** for example, 30 minutes of focus per pomodoro.
-- **Long break:** after every 4 pomodoros, take a longer break (for example 1 hour).
+- **Classic Pomodoro:** 25 minutes of focus and a 5 minute break, for lighter work.
+- **Custom timer:** choose your own focus (up to 45 minutes, for deep focus) and short break (at least 5 minutes).
+- **Long break:** the same in every mode. After every 4 focus blocks you get a 1 hour break.
 - **Break Reminder mode (planned):** a gentle reminder when it is time to rest.
 - **Force Break mode:** a full-screen break on every monitor with healthy tips. You can only leave early by solving a simple math problem (3 times a day), or with the Important button once those are used up. An Emergency exit is always there as a safety net.
 - **Creative breaks:** the long break suggests something fun and creative, not studying (sketch, play music, go for a walk, write a poem...). You can add your own ideas in Settings.

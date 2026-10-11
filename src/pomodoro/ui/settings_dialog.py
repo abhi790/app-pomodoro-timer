@@ -15,7 +15,16 @@ from PySide6.QtWidgets import (
 )
 
 from pomodoro.ideas import ideas_from_text, ideas_to_text
-from pomodoro.settings import MODE_NAME, PRESETS, AppConfig, Mode
+from pomodoro.settings import (
+    LONG_BREAK_MINUTES,
+    MAX_FOCUS_MINUTES,
+    MIN_BREAK_MINUTES,
+    MODE_NAME,
+    POMODOROS_BEFORE_LONG_BREAK,
+    PRESETS,
+    AppConfig,
+    Mode,
+)
 from pomodoro.timer_logic import TimerSettings
 
 MODE_HINT = {
@@ -24,7 +33,12 @@ MODE_HINT = {
         "Breaks take over every screen. You can leave early by solving a "
         "math problem, a few times a day."
     ),
-    Mode.CUSTOM: "Set your own times below.",
+    Mode.CUSTOM: (
+        f"Set your own focus (1 to {MAX_FOCUS_MINUTES} min) and short break "
+        f"({MIN_BREAK_MINUTES} min or more). The long break is the same in every "
+        f"mode: {LONG_BREAK_MINUTES} min after every {POMODOROS_BEFORE_LONG_BREAK} "
+        "focus blocks."
+    ),
 }
 
 
@@ -45,8 +59,8 @@ class SettingsDialog(QDialog):
         self._hint.setObjectName("muted")
         self._hint.setWordWrap(True)
 
-        self._focus = self._make_spin(1, 240, " min")
-        self._short_break = self._make_spin(1, 120, " min")
+        self._focus = self._make_spin(1, MAX_FOCUS_MINUTES, " min")
+        self._short_break = self._make_spin(MIN_BREAK_MINUTES, 120, " min")
         self._long_break = self._make_spin(1, 240, " min")
         self._cycle = self._make_spin(1, 12, " pomodoros")
         self._spins = (self._focus, self._short_break, self._long_break, self._cycle)
@@ -134,6 +148,10 @@ class SettingsDialog(QDialog):
             spin.setValue(value)
             spin.blockSignals(False)
             spin.setEnabled(editable)
+        # The long break is common to every mode, so it can be seen but never
+        # changed, not even in Custom.
+        self._long_break.setEnabled(False)
+        self._cycle.setEnabled(False)
 
     # ----- result ----------------------------------------------------------
 
