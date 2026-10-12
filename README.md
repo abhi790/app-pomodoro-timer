@@ -76,7 +76,9 @@ In a Command Prompt, inside the project folder:
 python -m unittest discover -s tests -t . -v
 ```
 
-All tests should say `ok`. See [docs/02-timer-logic.md](docs/02-timer-logic.md) for what the timer does.
+All tests should say `ok`. The tests run without a real screen. On Windows that also means without real fonts, so the two tests that measure how tall a text is are **skipped** there (they say "skipped"; that is normal).
+
+See [docs/02-timer-logic.md](docs/02-timer-logic.md) for what the timer does.
 
 ## Contributing
 

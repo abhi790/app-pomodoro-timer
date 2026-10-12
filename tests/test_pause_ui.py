@@ -9,7 +9,7 @@ from unittest import mock
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QGuiApplication
+from PySide6.QtGui import QFont, QFontMetrics, QGuiApplication
 from PySide6.QtWidgets import QApplication
 
 from pomodoro.backgrounds import BackgroundPicker
@@ -261,6 +261,20 @@ class PauseWindowTest(unittest.TestCase):
         self.assertTrue(window._timer.running)
 
 
+def real_fonts_available() -> bool:
+    """False when Qt has no real font to measure text with.
+
+    On Windows the tests run on the "offscreen" platform, which finds no fonts
+    (Qt then says "Cannot find font directory"). Every letter becomes a square
+    box of the same width, so a narrow "i" is as wide as a "W" and the height
+    of a text means nothing. Tests that measure text are skipped there.
+    """
+    font = QFont()
+    font.setPixelSize(24)
+    metrics = QFontMetrics(font)
+    return metrics.horizontalAdvance("i") < metrics.horizontalAdvance("W")
+
+
 def describe_tip(label, wanted: int) -> str:
     """Everything that decides how tall a tip is, for a failing test message
     (the same test can pass on one computer and fail on another, because fonts
@@ -341,6 +355,10 @@ class PauseTipsTest(unittest.TestCase):
                        overlay._back_button, overlay._check_button):
             self.assertEqual(button.objectName(), "overlayButton")
 
+    @unittest.skipUnless(
+        real_fonts_available(),
+        "this test platform has no real fonts (every letter is a square box)",
+    )
     def test_no_tip_is_cut_off_on_a_small_laptop_screen(self):
         overlay = PauseOverlay()
         self.addCleanup(overlay.close_for_real)
@@ -357,9 +375,7 @@ class PauseTipsTest(unittest.TestCase):
             ).height()
             self.assertLessEqual(wanted, label.height(), describe_tip(label, wanted))
 
-    def test_a_very_long_tip_gets_a_smaller_font_instead_of_being_cut_off(self):
-        # Fonts differ between computers (and with the Windows display scale),
-        # so a tip that is taller than the box must shrink, not be cut.
+    def show_long_tip(self):
         overlay = PauseOverlay()
         self.addCleanup(overlay.close_for_real)
         overlay.resize(1366, 768)
@@ -368,13 +384,25 @@ class PauseTipsTest(unittest.TestCase):
         text = "Sip water through the day, not only when you feel dry. " * 4
         overlay.set_tip(Tip("water", text), None, animate=False)
         _app.processEvents()
-        label = overlay._tip_label
+        return overlay._tip_label, text
+
+    def test_a_very_long_tip_gets_a_smaller_font(self):
+        # Fonts differ between computers (and with the Windows display scale),
+        # so a tip that is taller than the box must shrink, not be cut.
+        label, _text = self.show_long_tip()
+        self.assertLess(label.font().pixelSize(), TIP_FONT_SIZES[0])
+
+    @unittest.skipUnless(
+        real_fonts_available(),
+        "this test platform has no real fonts (every letter is a square box)",
+    )
+    def test_a_very_long_tip_fits_its_box_after_it_shrinks(self):
+        label, text = self.show_long_tip()
         wanted = label.fontMetrics().boundingRect(
             0, 0, label.width(), 10000,
             int(Qt.TextWordWrap | Qt.AlignCenter), text,
         ).height()
         self.assertLessEqual(wanted, label.height(), describe_tip(label, wanted))
-        self.assertLess(label.font().pixelSize(), TIP_FONT_SIZES[0])
 
     def test_a_short_tip_keeps_the_normal_font_size(self):
         overlay = PauseOverlay()
