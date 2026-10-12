@@ -261,6 +261,19 @@ class PauseWindowTest(unittest.TestCase):
         self.assertTrue(window._timer.running)
 
 
+def describe_tip(label, wanted: int) -> str:
+    """Everything that decides how tall a tip is, for a failing test message
+    (the same test can pass on one computer and fail on another, because fonts
+    differ)."""
+    font = label.font()
+    return (
+        f"wanted={wanted} box_height={label.height()} width={label.width()} "
+        f"family={font.family()!r} px={font.pixelSize()} pt={font.pointSizeF()} "
+        f"lineSpacing={label.fontMetrics().lineSpacing()} "
+        f"chars={len(label.text())} sheet={label.styleSheet()!r}"
+    )
+
+
 class PauseTipsTest(unittest.TestCase):
     """The pause screen shows the same healthy tips as the break screen."""
 
@@ -342,7 +355,7 @@ class PauseTipsTest(unittest.TestCase):
                 0, 0, label.width(), 10000,
                 int(Qt.TextWordWrap | Qt.AlignCenter), tip.text,
             ).height()
-            self.assertLessEqual(wanted, label.height(), tip.text)
+            self.assertLessEqual(wanted, label.height(), describe_tip(label, wanted))
 
     def test_a_very_long_tip_gets_a_smaller_font_instead_of_being_cut_off(self):
         # Fonts differ between computers (and with the Windows display scale),
@@ -360,7 +373,7 @@ class PauseTipsTest(unittest.TestCase):
             0, 0, label.width(), 10000,
             int(Qt.TextWordWrap | Qt.AlignCenter), text,
         ).height()
-        self.assertLessEqual(wanted, label.height())
+        self.assertLessEqual(wanted, label.height(), describe_tip(label, wanted))
         self.assertLess(label.font().pixelSize(), TIP_FONT_SIZES[0])
 
     def test_a_short_tip_keeps_the_normal_font_size(self):
