@@ -7,7 +7,7 @@ file) and your own long-break ideas.
 from pathlib import Path
 from typing import Optional
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -41,6 +41,12 @@ from pomodoro.settings import (
 from pomodoro.sound import check_sound_file
 from pomodoro.timer_logic import TimerSettings
 from pomodoro.ui.sound_player import AlertSound
+from pomodoro.window_fit import fit_in_area
+
+# The Save and Cancel row with its margins, under the scrolling part.
+BUTTONS_ROW_HEIGHT = 84
+# Used until Windows says how tall the title bar really is.
+FALLBACK_TITLE_BAR = 40
 
 MODE_HINT = {
     Mode.POMODORO: (
@@ -164,6 +170,10 @@ class SettingsDialog(QDialog):
         buttons_row.addWidget(buttons)
         root.addLayout(buttons_row)
 
+        self._fit_timer = QTimer(self)
+        self._fit_timer.setSingleShot(True)
+        self._fit_timer.timeout.connect(self._fit_to_screen)
+
         self._mode_box.currentIndexChanged.connect(self._on_mode_changed)
         for spin in self._spins:
             spin.valueChanged.connect(self._on_value_changed)
@@ -216,17 +226,43 @@ class SettingsDialog(QDialog):
         self._cycle.setEnabled(False)
 
     def showEvent(self, event) -> None:
-        """Fit the window to its content, but keep it inside the screen."""
+        """Fit the window to its content and keep all of it on the screen."""
         super().showEvent(event)
+        self._fit_to_screen()
+        # Windows only tells the real title bar size after the window is
+        # shown, so check once more right after.
+        self._fit_timer.start(0)
+
+    def _fit_to_screen(self) -> None:
+        """Make the window no taller than the screen and move it so that the
+        whole window, with its title bar and the Save button, is on the screen
+        (above the taskbar). See ``window_fit.py``."""
         screen = self.screen() or QGuiApplication.primaryScreen()
         if screen is None:
             return
-        wanted = self._content.sizeHint().height() + self._buttons_height()
-        limit = int(screen.availableGeometry().height() * 0.9)
-        self.resize(self.width(), min(wanted, limit))
-
-    def _buttons_height(self) -> int:
-        return 84  # the Save and Cancel row, with its margins
+        area = screen.availableGeometry()
+        frame, inside = self.frameGeometry(), self.geometry()
+        frame_extra = (
+            frame.width() - inside.width(),
+            max(frame.height() - inside.height(), FALLBACK_TITLE_BAR),
+        )
+        wanted = (
+            max(self.width(), self.minimumWidth()),
+            self._content.sizeHint().height() + BUTTONS_ROW_HEIGHT,
+        )
+        parent = self.parentWidget()
+        if parent is not None and parent.isVisible():
+            center = parent.frameGeometry().center()
+        else:
+            center = area.center()
+        x, y, width, height = fit_in_area(
+            wanted,
+            frame_extra,
+            (area.x(), area.y(), area.width(), area.height()),
+            (center.x(), center.y()),
+        )
+        self.resize(width, height)
+        self.move(x, y)
 
     # ----- the alert sound -------------------------------------------------
 

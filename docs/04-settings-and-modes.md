@@ -23,6 +23,18 @@ A settings file saved by an older version is fixed when the app starts:
 - the old **Break Reminder** mode becomes **Pomodoro**
 - the old **Force Break** mode becomes **Custom** with 45 min focus and a 10 min short break (what Force Break used to be)
 
+## The size of the Settings window
+
+The Settings window always fits on your screen. It is never taller than the usable part of the screen (the part above the taskbar), and it is moved so that the whole window, with its title bar and the **Save** and **Cancel** buttons, can be seen. It opens in the middle of the main window, but is pushed back onto the screen if the main window is close to an edge.
+
+If the content is taller than the window (a small laptop screen), the part above the buttons scrolls. **Save** and **Cancel** stay fixed at the bottom, so you never have to drag the window to reach them.
+
+| File | What it does |
+|---|---|
+| `src/pomodoro/window_fit.py` | Works out the size and place that keep a window on the screen (no windows, has tests) |
+| `src/pomodoro/ui/settings_dialog.py` | Uses it every time the window opens |
+| `tests/test_window_fit.py`, `tests/test_settings_fit.py` | Tests for the above |
+
 ## Saving
 
 Press **Save** and the timer uses the new times. Your choice is remembered the next time you open the app.
