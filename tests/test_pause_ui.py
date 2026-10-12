@@ -13,9 +13,10 @@ from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import QApplication
 
 from pomodoro.backgrounds import BackgroundPicker
+from pomodoro.fit_text import TIP_FONT_SIZES
 from pomodoro.settings import AppConfig, Mode
 from pomodoro.timer_logic import Phase
-from pomodoro.tips import CATEGORY_TITLE, HEALTHY_TIPS, TipRotator
+from pomodoro.tips import CATEGORY_TITLE, HEALTHY_TIPS, Tip, TipRotator
 from pomodoro.ui.main_window import MainWindow
 from pomodoro.ui.pause_overlay import PauseCoverManager, PauseOverlay
 from pomodoro.ui.theme import apply_theme
@@ -342,6 +343,47 @@ class PauseTipsTest(unittest.TestCase):
                 int(Qt.TextWordWrap | Qt.AlignCenter), tip.text,
             ).height()
             self.assertLessEqual(wanted, label.height(), tip.text)
+
+    def test_a_very_long_tip_gets_a_smaller_font_instead_of_being_cut_off(self):
+        # Fonts differ between computers (and with the Windows display scale),
+        # so a tip that is taller than the box must shrink, not be cut.
+        overlay = PauseOverlay()
+        self.addCleanup(overlay.close_for_real)
+        overlay.resize(1366, 768)
+        overlay.show()
+        apply_theme(_app)
+        text = "Sip water through the day, not only when you feel dry. " * 4
+        overlay.set_tip(Tip("water", text), None, animate=False)
+        _app.processEvents()
+        label = overlay._tip_label
+        wanted = label.fontMetrics().boundingRect(
+            0, 0, label.width(), 10000,
+            int(Qt.TextWordWrap | Qt.AlignCenter), text,
+        ).height()
+        self.assertLessEqual(wanted, label.height())
+        self.assertLess(label.font().pixelSize(), TIP_FONT_SIZES[0])
+
+    def test_a_short_tip_keeps_the_normal_font_size(self):
+        overlay = PauseOverlay()
+        self.addCleanup(overlay.close_for_real)
+        overlay.resize(1366, 768)
+        overlay.show()
+        apply_theme(_app)
+        overlay.set_tip(Tip("water", "Drink some water."), None, animate=False)
+        _app.processEvents()
+        self.assertEqual(overlay._tip_label.font().pixelSize(), TIP_FONT_SIZES[0])
+
+    def test_the_font_goes_back_to_normal_after_a_long_tip(self):
+        overlay = PauseOverlay()
+        self.addCleanup(overlay.close_for_real)
+        overlay.resize(1366, 768)
+        overlay.show()
+        apply_theme(_app)
+        long_text = "Sip water through the day, not only when you feel dry. " * 4
+        overlay.set_tip(Tip("water", long_text), None, animate=False)
+        overlay.set_tip(Tip("water", "Drink some water."), None, animate=False)
+        _app.processEvents()
+        self.assertEqual(overlay._tip_label.font().pixelSize(), TIP_FONT_SIZES[0])
 
 
 if __name__ == "__main__":

@@ -40,6 +40,7 @@ from PySide6.QtWidgets import (
 )
 
 from pomodoro.backgrounds import BackgroundPicker
+from pomodoro.fit_text import pick_font_px
 from pomodoro.lock_rules import can_stop
 from pomodoro.math_quiz import Problem, ProblemMaker, is_correct
 from pomodoro.tips import CATEGORY_TITLE, Tip, TipRotator, tip_display_seconds
@@ -206,6 +207,7 @@ class PauseOverlay(QWidget):
         the category has no picture)."""
         self._category_label.setText(CATEGORY_TITLE.get(tip.category, "").upper())
         self._tip_label.setText(tip.text)
+        self._fit_tip_font()
 
         image = QPixmap(str(image_path)) if image_path else None
         new_scene = Scene(tip.category, image)
@@ -222,6 +224,28 @@ class PauseOverlay(QWidget):
             self._blend = 1.0
             self._set_text_opacity(1.0)
         self.update()
+
+    def _fit_tip_font(self) -> None:
+        """Make the tip fit in its box, whatever the font of this computer.
+
+        How many pixels tall a tip is depends on the font and on the Windows
+        display scale. So the normal size is tried first, and a smaller one
+        only if the text would be taller than the box (see ``fit_text.py``).
+        The text is measured at the narrowest width the column can have, so
+        it also fits when the column is wider."""
+        label = self._tip_label
+        text = label.text()
+        width = max(label.width(), TIP_MIN_WIDTH)
+        flags = int(Qt.TextWordWrap | Qt.AlignCenter)
+
+        def height_at(px: int) -> int:
+            label.setStyleSheet(f"font-size: {px}px;")
+            label.ensurePolished()
+            return label.fontMetrics().boundingRect(0, 0, width, 10000, flags, text).height()
+
+        size = pick_font_px(height_at, TIP_MIN_HEIGHT)
+        label.setStyleSheet(f"font-size: {size}px;")
+        label.ensurePolished()
 
     def set_math_left(self, math_left: int) -> None:
         """Say how many math unlocks are left today. With none, there is no

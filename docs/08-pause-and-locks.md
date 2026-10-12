@@ -26,6 +26,7 @@ When the 3 math unlocks are used up, there is **no Stop button**. You can only R
 - The same **healthy tips and background pictures** as the break screen (water, food, move, eyes, posture, sleep, mind). A tip stays 10 to 20 seconds, then the next one fades in. Every monitor shows the same tip. A pause is a small moment of rest too. (The creative ideas are only for the long break.)
 - The **buttons are a little see-through**, so you still see the picture through them.
 - The clock is a bit smaller than on the break screen, so the tip and the buttons always fit, even on a small laptop screen (checked at 1366 x 768 and 1920 x 1080). No tip is ever cut off.
+- **A tip never gets cut off, whatever the font of your computer.** How tall a text is depends on the font and on the Windows display scale. So the tip is measured first: it is shown at the normal size (36), and only if it would be taller than its box does it get a smaller size (32, 29, 26 or at the smallest 24). Most tips keep the normal size. The next tip starts at the normal size again. The rule lives in `src/pomodoro/fit_text.py` (no windows, has tests).
 
 While the pause screen is up, Start, Reset, Settings and Quit (tray) are locked, just like during a break. The screen has no close button, ignores Alt+F4 and Esc, and comes back to the front if you click away. Task Manager and Ctrl+Alt+Del still work, because the app does no system tricks.
 
