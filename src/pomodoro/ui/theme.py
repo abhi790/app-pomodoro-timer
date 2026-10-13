@@ -17,6 +17,8 @@ TEXT = "#f4f4f7"
 TEXT_MUTED = "#a3a3b3"
 TEXT_DISABLED = "#6c6c7a"
 ACCENT = "#4c8dff"
+ACCENT_HOVER = "#6aa1ff"
+ACCENT_PRESSED = "#3a78e6"
 BREAK_GREEN = "#3c9d5d"
 
 APP_STYLE = f"""
@@ -157,6 +159,29 @@ QPushButton:focus {{
 }}
 
 QPushButton:disabled {{
+    color: {TEXT_DISABLED};
+    background-color: {BACKGROUND};
+    border: 1px solid {SURFACE};
+}}
+
+/* The main action (Start / Pause) is filled with the accent color. */
+QPushButton#primary {{
+    background-color: {ACCENT};
+    border: 1px solid {ACCENT};
+    color: #ffffff;
+}}
+
+QPushButton#primary:hover {{
+    background-color: {ACCENT_HOVER};
+    border: 1px solid {ACCENT_HOVER};
+}}
+
+QPushButton#primary:pressed {{
+    background-color: {ACCENT_PRESSED};
+    border: 1px solid {ACCENT_PRESSED};
+}}
+
+QPushButton#primary:disabled {{
     color: {TEXT_DISABLED};
     background-color: {BACKGROUND};
     border: 1px solid {SURFACE};

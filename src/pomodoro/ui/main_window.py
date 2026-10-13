@@ -107,6 +107,8 @@ class MainWindow(QWidget):
         self._message_label.setWordWrap(True)
 
         self._toggle_button = QPushButton("Start")
+        # Start/Pause is the main action, so it stands out (see theme.py).
+        self._toggle_button.setObjectName("primary")
         self._reset_button = QPushButton("Reset")
         self._settings_button = QPushButton("Settings")
         self._toggle_button.clicked.connect(self._on_toggle)
@@ -125,6 +127,9 @@ class MainWindow(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(32, 32, 32, 32)
         layout.setSpacing(14)
+        # Equal stretch above and below, so the timer sits in the middle and
+        # does not hang at the top with a big hole above the buttons.
+        layout.addStretch(1)
         layout.addWidget(self._phase_label)
         layout.addWidget(self._clock_label)
         layout.addWidget(self._count_label)
