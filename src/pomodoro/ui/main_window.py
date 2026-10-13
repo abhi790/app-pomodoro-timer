@@ -75,11 +75,13 @@ class MainWindow(QWidget):
         self._overlay.set_custom_ideas(self._config.ideas)
         self._overlay.math_unlocked.connect(self._on_math_unlocked)
         self._overlay.important_chosen.connect(self._on_important)
+        self._overlay.emergency_exit.connect(self._on_emergency_exit_break)
         self._force_break_active = False
         # Pause covers the screens with Run and Stop (Stop needs a math problem).
         self._pause_cover = PauseCoverManager(self)
         self._pause_cover.run_chosen.connect(self._on_run_chosen)
         self._pause_cover.stop_confirmed.connect(self._on_stop_confirmed)
+        self._pause_cover.emergency_exit.connect(self._on_emergency_exit_pause)
 
         self.setWindowTitle("Pomodoro Timer")
         self.setMinimumSize(520, 640)
@@ -195,6 +197,17 @@ class MainWindow(QWidget):
         self._pause_cover.hide()
         self._timer.abandon_focus()
         self._message_label.setText("Focus stopped. Ready when you are.")
+        self._refresh()
+
+    def _on_emergency_exit_pause(self) -> None:
+        """TESTING ONLY: the Emergency exit on the pause screen. Leave at once:
+        no math problem and no unlock is used. Like Stop, the focus block is
+        given up (it does not count) and the timer waits for Start."""
+        if not self._pause_cover.is_active:
+            return
+        self._pause_cover.hide()
+        self._timer.abandon_focus()
+        self._message_label.setText("Emergency exit (testing). Focus stopped.")
         self._refresh()
 
     def _on_reset(self) -> None:
@@ -324,6 +337,17 @@ class MainWindow(QWidget):
         self._timer.skip()  # break -> Focus, stopped
         self._end_force_break()
         self._message_label.setText("Break ended early. Ready to focus?")
+        self._refresh()
+
+    def _on_emergency_exit_break(self) -> None:
+        """TESTING ONLY: the Emergency exit on the break screen. The break ends
+        now, with no math problem, and no unlock or Important is used. The timer
+        waits on Focus until the user presses Start."""
+        if not self._force_break_active:
+            return
+        self._timer.skip()  # break -> Focus, stopped
+        self._end_force_break()
+        self._message_label.setText("Emergency exit (testing). Ready to focus?")
         self._refresh()
 
     def _on_important(self) -> None:

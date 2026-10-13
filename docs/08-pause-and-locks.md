@@ -28,6 +28,8 @@ When the 3 math unlocks are used up, there is **no Stop button**. You can only R
 - The clock is a bit smaller than on the break screen, so the tip and the buttons always fit, even on a small laptop screen (checked at 1366 x 768 and 1920 x 1080). No tip is ever cut off.
 - **A tip never gets cut off, whatever the font of your computer.** How tall a text is depends on the font and on the Windows display scale. So the tip is measured first: it is shown at the normal size (36), and only if it would be taller than its box does it get a smaller size (32, 29, 26 or at the smallest 24). Most tips keep the normal size. The next tip starts at the normal size again. The rule lives in `src/pomodoro/fit_text.py` (no windows, has tests).
 
+**Testing only:** the pause screen also has a small **Emergency exit (testing only)** button in the bottom right corner. It gives the focus block up at once, with no math problem and without using an unlock (the block does not count, the timer waits for Start). It is switched off for a real release, see [05b-math-unlock.md](05b-math-unlock.md#emergency-exit-testing-only).
+
 While the pause screen is up, Start, Reset, Settings and Quit (tray) are locked, just like during a break. The screen has no close button, ignores Alt+F4 and Esc, and comes back to the front if you click away. Task Manager and Ctrl+Alt+Del still work, because the app does no system tricks.
 
 Pause is only for focus blocks. During a break the timer is locked anyway (see [05-force-break-overlay.md](05-force-break-overlay.md)).
@@ -52,3 +54,5 @@ Pause is only for focus blocks. During a break the timer is locked anyway (see [
 4. Press **Pause**, then **Stop**, solve the problem: the timer is back at a full focus block, stopped. The text says "Focus stopped". Reset and Settings work again. "Pomodoros done" did not go up.
 5. Do step 4 three times in a day (or let breaks use the unlocks): the next Pause has only **Run**.
 6. While the pause screen is up, right-click the tomato in the tray: **Quit** is greyed out.
+7. On the pause screen press **Emergency exit (testing only)** (bottom right): the screen goes at once, with no math problem. The timer is back at a full focus block, stopped. "Pomodoros done" did not go up, and the math unlocks left are the same as before.
+8. Same on the break screen (Custom, 1 min focus): the button is in the bottom right corner, one press ends the break at once and the unlocks left are unchanged.

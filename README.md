@@ -14,6 +14,7 @@ A Pomodoro timer helps you focus. You work for a fixed block of time (a "pomodor
 - **Custom timer:** choose your own focus (up to 45 minutes, for deep focus) and short break (at least 5 minutes).
 - **Long break:** the same in both modes. After every 4 focus blocks you get a 1 hour break.
 - **Force Break in both modes:** every break is a full-screen break on every monitor with healthy tips. There is no "reminder only" mode. You can only leave early by solving a simple math problem (3 times a day), or with the Important button once those are used up.
+- **Testing phase only:** while the app is being tested, the break and pause screens have a small **Emergency exit** button in the bottom right corner. It leaves at once, with no math problem. It is removed before a real release with one switch (`EMERGENCY_EXIT_ENABLED` in `src/pomodoro/lock_rules.py`).
 - **Alert sound:** a soft chime when a focus block or a break ends. You can switch it off or choose your own `.wav` sound in Settings.
 - **Creative breaks:** the long break suggests something fun and creative, not studying (sketch, play music, go for a walk, write a poem...). You can add your own ideas in Settings.
 - **A real Pomodoro, not a toy:** while the timer runs, Reset and Settings are locked. Pause covers the screen with Run and Stop. Stop needs a math problem (one of the 3 daily unlocks) and the interrupted block does not count. With no unlocks left, you can only Run.

@@ -45,6 +45,7 @@ from pomodoro.lock_rules import can_stop
 from pomodoro.math_quiz import Problem, ProblemMaker, is_correct
 from pomodoro.tips import CATEGORY_TITLE, Tip, TipRotator, tip_display_seconds
 from pomodoro.ui.break_overlay import FADE_MS, TIP_MAX_WIDTH, Scene
+from pomodoro.ui.emergency_exit import make_emergency_button, place_in_corner
 from pomodoro.ui.theme import SCREEN_STYLE
 from pomodoro.usage import DAILY_MATH_LIMIT
 
@@ -63,6 +64,7 @@ class PauseOverlay(QWidget):
 
     run_chosen = Signal()
     math_solved = Signal()
+    emergency_exit = Signal()  # testing only, see emergency_exit.py
 
     def __init__(self, maker: Optional[ProblemMaker] = None) -> None:
         super().__init__()
@@ -172,6 +174,13 @@ class PauseOverlay(QWidget):
         layout.addStretch(1)
         layout.addWidget(panel, alignment=Qt.AlignHCenter)
         layout.addStretch(1)
+
+        # Testing only: leave at once, no math (None when the flag is off). It
+        # floats in the corner, so it does not change the layout.
+        self._emergency_button = make_emergency_button(self)
+        if self._emergency_button is not None:
+            self._emergency_button.clicked.connect(self.emergency_exit)
+            place_in_corner(self._emergency_button, self)
 
         # Soft changes when a new tip arrives: the picture cross-fades and the
         # text fades in (the same as on the break screen).
@@ -331,6 +340,10 @@ class PauseOverlay(QWidget):
         for effect in self._text_effects:
             effect.setOpacity(value)
 
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        place_in_corner(self._emergency_button, self)
+
     def closeEvent(self, event: QCloseEvent) -> None:
         if self._allow_close:
             event.accept()
@@ -352,6 +365,7 @@ class PauseCoverManager(QObject):
 
     run_chosen = Signal()
     stop_confirmed = Signal()
+    emergency_exit = Signal()  # testing only, see emergency_exit.py
 
     def __init__(
         self,
@@ -427,6 +441,7 @@ class PauseCoverManager(QObject):
             overlay.set_math_left(self._math_left)
             overlay.run_chosen.connect(self.run_chosen)
             overlay.math_solved.connect(self.stop_confirmed)
+            overlay.emergency_exit.connect(self.emergency_exit)
             overlay.showFullScreen()
             self._overlays.append(overlay)
         if self._overlays:

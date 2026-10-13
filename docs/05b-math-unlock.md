@@ -26,9 +26,16 @@ When the 3 math unlocks are used up, the math button goes away. In its place you
 
 While math unlocks are left, Important is hidden, because solving a problem is the better way out: it ends the break completely.
 
-## No emergency exit
+## Emergency exit (testing only)
 
-There used to be an **Emergency exit** button, kept only while the app was being tested. It is gone now. Solving a math problem (or Important, once those are used up) is the way out of a break early. If you ever get really stuck, Task Manager still works, because the app does no system tricks (see [05-force-break-overlay.md](05-force-break-overlay.md)).
+While the app is still being tested, the break screen (and the pause screen) have a small **Emergency exit (testing only)** button in the bottom right corner. It has **no logic**: one press and you are out. No math problem, no daily count, no Important, no limit.
+
+- On the **break screen** the break ends at once and the timer waits on Focus. No math unlock and no Important is used.
+- On the **pause screen** the focus block is given up (it does not count) and the timer waits for Start. No math unlock is used. See [08-pause-and-locks.md](08-pause-and-locks.md).
+- It floats in the corner and is not part of the layout, so it never makes the screen taller.
+- It is **not part of the final product**. One switch removes it from both screens, before a real release: set `EMERGENCY_EXIT_ENABLED = False` in `src/pomodoro/lock_rules.py`. Nothing else has to change.
+
+Without it (or if it is switched off), the way out of a break early is a math problem, or Important once those are used up. If you ever get really stuck, Task Manager still works, because the app does no system tricks (see [05-force-break-overlay.md](05-force-break-overlay.md)).
 
 ## The daily count
 

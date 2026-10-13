@@ -194,6 +194,24 @@ QPushButton#primary:disabled {{
     border: 1px solid {SURFACE};
 }}
 
+/* TESTING ONLY: the Emergency exit on the break and pause screens. Quiet, so
+   it does not look like the normal way out, but easy to find. */
+QPushButton#emergencyExit {{
+    background-color: rgba(120, 30, 30, 90);
+    border: 1px solid rgba(232, 144, 141, 150);
+    color: #f0b0ad;
+    font-size: 15px;
+    padding: 6px 18px;
+}}
+
+QPushButton#emergencyExit:hover {{
+    background-color: rgba(160, 40, 40, 150);
+}}
+
+QPushButton#emergencyExit:pressed {{
+    background-color: rgba(190, 50, 50, 190);
+}}
+
 /* The small Day / Night switch in the corner of the main window. */
 QPushButton#themeToggle {{
     padding: 6px 16px;

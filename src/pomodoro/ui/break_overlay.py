@@ -36,6 +36,7 @@ from PySide6.QtWidgets import (
 
 from pomodoro.ideas import IDEA_CATEGORY, IDEA_TITLE
 from pomodoro.tips import CATEGORY_TITLE, Tip
+from pomodoro.ui.emergency_exit import make_emergency_button, place_in_corner
 from pomodoro.ui.theme import SCREEN_STYLE
 from pomodoro.ui.unlock_panel import UnlockPanel
 
@@ -108,6 +109,7 @@ class BreakOverlay(QWidget):
     # Passed on from the unlock panel, so the manager only listens to the window.
     math_solved = Signal()
     important_chosen = Signal()
+    emergency_exit = Signal()  # testing only, see emergency_exit.py
 
     def __init__(self) -> None:
         super().__init__()
@@ -159,6 +161,13 @@ class BreakOverlay(QWidget):
         layout.addWidget(self._panel, alignment=Qt.AlignHCenter)
         layout.addStretch(1)
         layout.addWidget(hint)
+
+        # Testing only: leave at once, no math (None when the flag is off). It
+        # floats in the corner, so it does not change the layout.
+        self._emergency_button = make_emergency_button(self)
+        if self._emergency_button is not None:
+            self._emergency_button.clicked.connect(self.emergency_exit)
+            place_in_corner(self._emergency_button, self)
 
         # Soft changes when a new tip arrives: the picture cross-fades and
         # the text fades in.
@@ -240,6 +249,10 @@ class BreakOverlay(QWidget):
             effect.setOpacity(value)
 
     # ----- things the user must not be able to do -------------------------
+
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        place_in_corner(self._emergency_button, self)
 
     def closeEvent(self, event: QCloseEvent) -> None:
         if self._allow_close:

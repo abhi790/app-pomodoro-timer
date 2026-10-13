@@ -1,12 +1,14 @@
 import os
 import random
 import unittest
+from unittest import mock
 
 # Run without a real screen if nobody chose a Qt platform already.
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtWidgets import QApplication
 
+from pomodoro import lock_rules
 from pomodoro.ideas import CREATIVE_IDEAS, IDEA_CATEGORY, IdeaRotator
 from pomodoro.settings import AppConfig, Mode
 from pomodoro.tips import TipRotator
@@ -111,13 +113,17 @@ class UnlockSignalsTest(unittest.TestCase):
         self.assertFalse(panel._leave_button.isVisibleTo(panel))
         self.assertTrue(panel._important_button.isVisibleTo(panel))
 
-    def test_there_is_no_emergency_exit_any_more(self):
-        manager = make_manager()
-        self.addCleanup(manager.hide)
-        manager.show("10:00", 3)
-        panel = manager._overlays[0]._panel
-        self.assertFalse(hasattr(panel, "emergency_chosen"))
-        self.assertFalse(hasattr(manager, "emergency_exit"))
+    def test_with_the_testing_flag_off_there_is_no_emergency_exit(self):
+        # The Emergency exit is a testing aid (see tests/test_emergency_exit.py).
+        # With the flag off, as in a real release, there is no button at all
+        # and the unlock panel never had one of its own.
+        with mock.patch.object(lock_rules, "EMERGENCY_EXIT_ENABLED", False):
+            manager = make_manager()
+            self.addCleanup(manager.hide)
+            manager.show("10:00", 3)
+        overlay = manager._overlays[0]
+        self.assertIsNone(overlay._emergency_button)
+        self.assertFalse(hasattr(overlay._panel, "emergency_chosen"))
 
 
 class SettingsDialogIdeasTest(unittest.TestCase):

@@ -31,6 +31,7 @@ class BreakOverlayManager(QObject):
 
     math_unlocked = Signal()
     important_chosen = Signal()
+    emergency_exit = Signal()  # testing only, see emergency_exit.py
 
     def __init__(
         self,
@@ -136,6 +137,7 @@ class BreakOverlayManager(QObject):
             overlay.set_unlock_state(self._math_left, self._important_used)
             overlay.math_solved.connect(self.math_unlocked)
             overlay.important_chosen.connect(self.important_chosen)
+            overlay.emergency_exit.connect(self.emergency_exit)
             overlay.showFullScreen()
             self._overlays.append(overlay)
         if self._overlays:
