@@ -18,12 +18,14 @@ from collections import deque
 from pathlib import Path
 from typing import Optional
 
+from pomodoro.paths import package_dir
+
 IMAGE_SUFFIXES = (".jpg", ".jpeg", ".png", ".webp")
 
 
 def default_folder() -> Path:
     """The folder that holds one sub-folder per category."""
-    return Path(__file__).resolve().parent / "assets" / "backgrounds"
+    return package_dir() / "assets" / "backgrounds"
 
 
 def find_images(category: str, folder: Optional[Path] = None) -> list:

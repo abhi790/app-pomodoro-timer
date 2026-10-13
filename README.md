@@ -69,7 +69,7 @@ app-pomodoro-timer/
 - [x] Step 7a: alert sound (a default chime, or your own `.wav`)
 - [x] Step 7b: tray icon (the timer keeps running when you close the window)
 - [x] Step 9: Day and Night look (a switch in the main window, remembered)
-- [ ] Step 7c: a Windows `.exe`
+- [x] Step 7c: a Windows `.exe` (build script ready, see [docs/07c-exe.md](docs/07c-exe.md); the build on Windows still has to be tested)
 
 ## Run the tests
 
