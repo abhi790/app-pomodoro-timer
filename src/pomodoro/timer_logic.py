@@ -119,15 +119,6 @@ class PomodoroTimer:
         self._running = False
         self._remaining = self._settings.duration_seconds(Phase.FOCUS)
 
-    def limit_remaining(self, seconds: int) -> None:
-        """Make the current block end sooner.
-
-        If more than ``seconds`` are left, only ``seconds`` are left. It never
-        makes the block longer. (The Important button uses this to cut a break
-        down to 3 minutes.)
-        """
-        self._remaining = min(self._remaining, max(1, seconds))
-
     def update_settings(self, settings: TimerSettings) -> None:
         """Use new times. If the timer is stopped, the current phase restarts
         with its new length. A running phase keeps its remaining time."""

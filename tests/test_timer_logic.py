@@ -148,38 +148,14 @@ class PomodoroTimerTest(unittest.TestCase):
         self.assertEqual(t.remaining_seconds, 30 * 60)
         self.assertFalse(t.running)
 
-    def test_limit_remaining_cuts_a_long_break_short(self):
-        t = PomodoroTimer(TimerSettings(focus_minutes=1, long_break_minutes=60,
-                                        pomodoros_before_long_break=1))
-        finish_phase(t)
-        self.assertEqual(t.phase, Phase.LONG_BREAK)
-        t.start()
-        t.limit_remaining(180)
-        self.assertEqual(t.remaining_seconds, 180)
-        self.assertEqual(t.phase, Phase.LONG_BREAK)
-        self.assertTrue(t.running)
-
-    def test_limit_remaining_never_makes_time_longer(self):
-        t = PomodoroTimer()
-        t.limit_remaining(10 * 60 * 60)
-        self.assertEqual(t.remaining_seconds, 30 * 60)
-
-    def test_limit_remaining_keeps_a_shorter_break_as_it_is(self):
+    def test_a_break_cannot_be_cut_short_except_by_skip(self):
+        # The Important button (cut a break to 3 minutes) is gone: after the
+        # math unlocks are used up, a break runs its full length.
+        self.assertFalse(hasattr(PomodoroTimer, "limit_remaining"))
         t = PomodoroTimer()
         finish_phase(t)
         t.start()
-        t.tick(4 * 60)  # 1 minute of the 5-minute break is left
-        t.limit_remaining(180)
-        self.assertEqual(t.remaining_seconds, 60)
-
-    def test_limit_remaining_then_the_break_ends_into_focus(self):
-        t = PomodoroTimer()
-        finish_phase(t)
-        t.start()
-        t.limit_remaining(60)
-        self.assertEqual(t.tick(60), Phase.SHORT_BREAK)
-        self.assertEqual(t.phase, Phase.FOCUS)
-        self.assertFalse(t.running)
+        self.assertEqual(t.remaining_seconds, 5 * 60)
 
     def test_reset_goes_back_to_start(self):
         t = PomodoroTimer()

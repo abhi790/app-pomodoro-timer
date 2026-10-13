@@ -18,7 +18,7 @@ The app now lives in the system tray (the small icons next to the clock). You ca
 ## During a break
 
 - The full-screen **Force Break appears even if the main window is hidden** in the tray.
-- **Quit is greyed out during a Force Break**, just like Start, Reset and Settings are locked then. After the break (or after leaving it early) it works again. The ways out of a break early are the math problem and, once those are used up, the Important button.
+- **Quit is greyed out during a Force Break**, just like Start, Reset and Settings are locked then. After the break (or after leaving it early) it works again. The only way out of a break early is the math problem (3 times a day). After those, the break runs its full time.
 - When a break ends while the window is hidden, a small pop-up from the tray says **"Break is over. Ready to focus?"**. The sound plays as usual.
 
 ## If there is no tray

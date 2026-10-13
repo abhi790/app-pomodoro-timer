@@ -6,10 +6,9 @@ top, updates the countdown and rotates the tips (each tip with its picture).
 It also passes on what the user chose on the unlock panel:
 
 * ``math_unlocked``: a math problem was solved, the break should end now
-* ``important_chosen``: the Important button was pressed
 
 The manager does not count anything and does not touch the timer. The main
-window listens to these two signals and decides what happens.
+window listens to this signal and decides what happens.
 """
 
 from pathlib import Path
@@ -30,7 +29,6 @@ class BreakOverlayManager(QObject):
     """Shows the break window on all monitors and keeps it up to date."""
 
     math_unlocked = Signal()
-    important_chosen = Signal()
     emergency_exit = Signal()  # testing only, see emergency_exit.py
 
     def __init__(
@@ -51,7 +49,6 @@ class BreakOverlayManager(QObject):
         self._tip: Optional[Tip] = None
         self._image: Optional[Path] = None
         self._math_left = 0
-        self._important_used = False
 
         self._keep_on_top = QTimer(self)
         self._keep_on_top.setInterval(KEEP_ON_TOP_MS)
@@ -80,15 +77,15 @@ class BreakOverlayManager(QObject):
         """Open the break windows (does nothing new if already open).
 
         ``math_left`` is how many math unlocks remain today. With none left,
-        the windows offer the Important button instead. In a long break, a
-        creative idea and a healthy tip take turns (starting with the idea).
+        the windows have no way out button and the break runs its full time.
+        In a long break, a creative idea and a healthy tip take turns
+        (starting with the idea).
         """
         self._clock_text = clock_text
         if self.is_active:
             self.update_clock(clock_text)
             return
         self._math_left = math_left
-        self._important_used = False
         self._long_break = long_break
         self._idea_turn = long_break
         self._choose_tip()
@@ -100,11 +97,6 @@ class BreakOverlayManager(QObject):
         self._clock_text = clock_text
         for overlay in self._overlays:
             overlay.set_clock(clock_text)
-
-    def mark_important_used(self) -> None:
-        """The break was shortened: hide the Important button."""
-        self._important_used = True
-        self._apply_unlock_state()
 
     def hide(self) -> None:
         """Close all break windows."""
@@ -134,9 +126,8 @@ class BreakOverlayManager(QObject):
             overlay.setGeometry(screen.geometry())
             overlay.set_clock(self._clock_text)
             overlay.set_tip(self._tip, self._image, animate=False)
-            overlay.set_unlock_state(self._math_left, self._important_used)
+            overlay.set_unlock_state(self._math_left)
             overlay.math_solved.connect(self.math_unlocked)
-            overlay.important_chosen.connect(self.important_chosen)
             overlay.emergency_exit.connect(self.emergency_exit)
             overlay.showFullScreen()
             self._overlays.append(overlay)
@@ -148,10 +139,6 @@ class BreakOverlayManager(QObject):
         for overlay in overlays:
             overlay.close_for_real()
             overlay.deleteLater()
-
-    def _apply_unlock_state(self) -> None:
-        for overlay in self._overlays:
-            overlay.set_unlock_state(self._math_left, self._important_used)
 
     def _on_screens_changed(self, *_args) -> None:
         """A monitor was plugged in or removed while the break is on."""

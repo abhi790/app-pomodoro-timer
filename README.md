@@ -13,7 +13,7 @@ A Pomodoro timer helps you focus. You work for a fixed block of time (a "pomodor
 - **Classic Pomodoro:** 25 minutes of focus and a 5 minute break, for lighter work.
 - **Custom timer:** choose your own focus (up to 45 minutes, for deep focus) and short break (at least 5 minutes).
 - **Long break:** the same in both modes. After every 4 focus blocks you get a 1 hour break.
-- **Force Break in both modes:** every break is a full-screen break on every monitor with healthy tips. There is no "reminder only" mode. You can only leave early by solving a simple math problem (3 times a day), or with the Important button once those are used up.
+- **Force Break in both modes:** every break is a full-screen break on every monitor with healthy tips. There is no "reminder only" mode. You can only leave early by solving a math problem (3 times a day). After those, the break runs its full time.
 - **Testing phase only:** while the app is being tested, the break and pause screens have a small **Emergency exit** button in the bottom right corner. It leaves at once, with no math problem. It is removed before a real release with one switch (`EMERGENCY_EXIT_ENABLED` in `src/pomodoro/lock_rules.py`).
 - **Alert sound:** a soft chime when a focus block or a break ends. You can switch it off or choose your own `.wav` sound in Settings.
 - **Creative breaks:** the long break suggests something fun and creative, not studying (sketch, play music, go for a walk, write a poem...). You can add your own ideas in Settings.
@@ -62,7 +62,7 @@ app-pomodoro-timer/
 - [x] Step 4: settings screen and modes (Pomodoro and Custom, both with Force Break)
 - [x] Step 4a-1: app icon (a tomato) for the window and the taskbar
 - [x] Step 5a: Force Break full-screen overlay with healthy tips (all monitors)
-- [x] Step 5b: math unlock, daily limit and the Important button
+- [x] Step 5b: math unlock and daily limit (the Important button was removed later)
 - [x] Test buttons and the Emergency exit removed (they were only for testing)
 - [x] Step 8: Reset and Settings locked while running, Pause screen with Run and Stop (math)
 - [x] Step 6: creative long-break suggestions (with your own ideas)

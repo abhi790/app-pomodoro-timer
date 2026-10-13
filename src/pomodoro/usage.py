@@ -1,9 +1,9 @@
 """The daily count of break unlocks, saved in a small file.
 
-No windows here, so it is easy to test. Two numbers are kept for today:
-
-* ``math_used``: how many times a math problem was solved to leave a break
-* ``important_used``: how many times the Important button was used
+No windows here, so it is easy to test. One number is kept for today:
+``math_used``, how many times a math problem was solved to leave a break.
+(Older versions also kept ``important_used``. That button is gone. An old file
+that still has the number loads fine, and the number is ignored.)
 
 The count starts from zero on a new day (after midnight). It is saved in
 ``usage.json``, next to ``settings.json``, so closing the app does not give
@@ -24,15 +24,11 @@ from pomodoro.settings import config_path
 # How many times a day a math problem can end a break early.
 DAILY_MATH_LIMIT = 3
 
-# With the Important button, the break becomes this long (3 minutes).
-IMPORTANT_BREAK_SECONDS = 180
-
 
 @dataclass(frozen=True)
 class DailyUsage:
     day: str  # the date as text, like "2026-10-10"
     math_used: int = 0
-    important_used: int = 0
 
 
 def usage_path() -> Path:
@@ -53,13 +49,12 @@ def load_usage(path: Optional[Path], today: str) -> DailyUsage:
         usage = DailyUsage(
             day=data["day"],
             math_used=data["math_used"],
-            important_used=data["important_used"],
         )
     except (OSError, ValueError, TypeError, KeyError):
         return fresh
     if usage.day != today:
         return fresh
-    if not (_is_count(usage.math_used) and _is_count(usage.important_used)):
+    if not _is_count(usage.math_used):
         return fresh
     return usage
 
@@ -98,23 +93,11 @@ class UsageTracker:
     def math_left(self) -> int:
         return max(0, DAILY_MATH_LIMIT - self.math_used)
 
-    @property
-    def important_used(self) -> int:
-        self._roll_over_if_new_day()
-        return self._usage.important_used
-
     # ----- changes ---------------------------------------------------------
 
     def record_math(self) -> None:
         self._roll_over_if_new_day()
         self._usage = replace(self._usage, math_used=self._usage.math_used + 1)
-        self._save()
-
-    def record_important(self) -> None:
-        self._roll_over_if_new_day()
-        self._usage = replace(
-            self._usage, important_used=self._usage.important_used + 1
-        )
         self._save()
 
     # ----- internals -------------------------------------------------------

@@ -87,7 +87,7 @@ class ScreenButtonTest(unittest.TestCase):
         with flag(True):
             break_overlay = self.shown(BreakOverlay())
             pause_overlay = self.shown(PauseOverlay())
-        break_overlay.set_unlock_state(0, True)
+        break_overlay.set_unlock_state(0)
         pause_overlay.set_math_left(0)
         self.assertTrue(break_overlay._emergency_button.isVisible())
         self.assertTrue(pause_overlay._emergency_button.isVisible())
@@ -96,7 +96,7 @@ class ScreenButtonTest(unittest.TestCase):
         with flag(True):
             break_overlay = self.shown(BreakOverlay())
             pause_overlay = self.shown(PauseOverlay())
-        break_overlay.set_unlock_state(3, False)
+        break_overlay.set_unlock_state(3)
         pause_overlay.set_math_left(3)
         break_overlay._panel._leave_button.click()
         pause_overlay._stop_button.click()
@@ -196,12 +196,11 @@ class MainWindowTest(unittest.TestCase):
         self.assertIs(window._timer.phase, Phase.FOCUS)
         self.assertFalse(window._timer.running)
 
-    def test_on_the_break_it_uses_no_math_unlock_and_no_important(self):
+    def test_on_the_break_it_uses_no_math_unlock(self):
         window, usage, _ = self.make(math_used=1)
         self.end_focus(window)
         window._overlay._overlays[0]._emergency_button.click()
         self.assertEqual(usage.math_used, 1)
-        self.assertEqual(usage.important_used, 0)
 
     def test_on_the_break_it_works_even_with_no_math_unlock_left(self):
         window, usage, _ = self.make(math_used=3)

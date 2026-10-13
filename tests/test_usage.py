@@ -4,9 +4,9 @@ import unittest
 from datetime import date
 from pathlib import Path
 
+from pomodoro import usage as usage_module
 from pomodoro.usage import (
     DAILY_MATH_LIMIT,
-    IMPORTANT_BREAK_SECONDS,
     DailyUsage,
     UsageTracker,
     load_usage,
@@ -31,8 +31,13 @@ class ConstantsTest(unittest.TestCase):
     def test_three_math_unlocks_a_day(self):
         self.assertEqual(DAILY_MATH_LIMIT, 3)
 
-    def test_important_break_is_three_minutes(self):
-        self.assertEqual(IMPORTANT_BREAK_SECONDS, 3 * 60)
+    def test_there_is_no_important_button_any_more(self):
+        # After the 3 math unlocks are used up, the break simply runs its full
+        # length. Nothing in the daily count is about "Important" any more.
+        self.assertFalse(hasattr(usage_module, "IMPORTANT_BREAK_SECONDS"))
+        self.assertFalse(hasattr(UsageTracker, "record_important"))
+        self.assertFalse(hasattr(UsageTracker, "important_used"))
+        self.assertNotIn("important_used", DailyUsage.__dataclass_fields__)
 
 
 class LoadSaveTest(unittest.TestCase):
@@ -45,9 +50,27 @@ class LoadSaveTest(unittest.TestCase):
         self.assertEqual(load_usage(self.path, "2026-10-10"), DailyUsage("2026-10-10"))
 
     def test_save_then_load_same_day(self):
-        save_usage(DailyUsage("2026-10-10", math_used=2, important_used=1), self.path)
+        save_usage(DailyUsage("2026-10-10", math_used=2), self.path)
         loaded = load_usage(self.path, "2026-10-10")
-        self.assertEqual(loaded, DailyUsage("2026-10-10", 2, 1))
+        self.assertEqual(loaded, DailyUsage("2026-10-10", 2))
+
+    def test_a_file_without_important_used_still_loads(self):
+        self.path.parent.mkdir(parents=True)
+        self.path.write_text(
+            json.dumps({"day": "2026-10-10", "math_used": 2}), encoding="utf-8"
+        )
+        self.assertEqual(load_usage(self.path, "2026-10-10"), DailyUsage("2026-10-10", 2))
+
+    def test_an_old_file_with_important_used_keeps_the_math_count(self):
+        # Files written by older versions have the extra number. The math
+        # count must survive, so nobody gets their 3 unlocks back by updating.
+        self.path.parent.mkdir(parents=True)
+        for extra in (0, 5, "junk", None, -1):
+            data = {"day": "2026-10-10", "math_used": 3, "important_used": extra}
+            self.path.write_text(json.dumps(data), encoding="utf-8")
+            self.assertEqual(
+                load_usage(self.path, "2026-10-10"), DailyUsage("2026-10-10", 3), extra
+            )
 
     def test_save_creates_the_folder(self):
         save_usage(DailyUsage("2026-10-10"), self.path)
@@ -70,7 +93,7 @@ class LoadSaveTest(unittest.TestCase):
     def test_bad_numbers_are_a_fresh_day(self):
         self.path.parent.mkdir(parents=True)
         for bad in (-1, "2", 1.5, True, None):
-            data = {"day": "2026-10-10", "math_used": bad, "important_used": 0}
+            data = {"day": "2026-10-10", "math_used": bad}
             self.path.write_text(json.dumps(data), encoding="utf-8")
             self.assertEqual(
                 load_usage(self.path, "2026-10-10"), DailyUsage("2026-10-10"), bad
@@ -91,7 +114,6 @@ class UsageTrackerTest(unittest.TestCase):
         t = self.tracker()
         self.assertEqual(t.math_used, 0)
         self.assertEqual(t.math_left, DAILY_MATH_LIMIT)
-        self.assertEqual(t.important_used, 0)
 
     def test_record_math_counts_down(self):
         t = self.tracker()
@@ -105,20 +127,12 @@ class UsageTrackerTest(unittest.TestCase):
             t.record_math()
         self.assertEqual(t.math_left, 0)
 
-    def test_record_important_has_no_limit(self):
-        t = self.tracker()
-        for _ in range(10):
-            t.record_important()
-        self.assertEqual(t.important_used, 10)
-
     def test_count_is_saved_and_survives_a_restart(self):
         t = self.tracker()
         t.record_math()
         t.record_math()
-        t.record_important()
         again = self.tracker()
         self.assertEqual(again.math_used, 2)
-        self.assertEqual(again.important_used, 1)
         self.assertEqual(again.math_left, DAILY_MATH_LIMIT - 2)
 
     def test_new_day_after_restart_starts_again(self):
@@ -133,11 +147,9 @@ class UsageTrackerTest(unittest.TestCase):
         t = self.tracker()
         for _ in range(DAILY_MATH_LIMIT):
             t.record_math()
-        t.record_important()
         self.assertEqual(t.math_left, 0)
         self.clock.today = DAY_TWO  # the clock passes midnight
         self.assertEqual(t.math_left, DAILY_MATH_LIMIT)
-        self.assertEqual(t.important_used, 0)
 
     def test_first_record_of_the_new_day_counts_as_one(self):
         t = self.tracker()
@@ -150,9 +162,7 @@ class UsageTrackerTest(unittest.TestCase):
         t = self.tracker()
         t.record_math()
         data = json.loads(self.path.read_text(encoding="utf-8"))
-        self.assertEqual(
-            data, {"day": "2026-10-10", "math_used": 1, "important_used": 0}
-        )
+        self.assertEqual(data, {"day": "2026-10-10", "math_used": 1})
 
     def test_unwritable_location_does_not_crash(self):
         blocker = Path(self._tmp.name) / "blocker"

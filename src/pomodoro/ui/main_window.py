@@ -31,7 +31,7 @@ from pomodoro.ui.settings_dialog import SettingsDialog
 from pomodoro.ui.sound_player import AlertSound
 from pomodoro.ui.theme import apply_theme
 from pomodoro.ui.tray import TrayIcon
-from pomodoro.usage import IMPORTANT_BREAK_SECONDS, UsageTracker
+from pomodoro.usage import UsageTracker
 
 PHASE_NAME = {
     Phase.FOCUS: "Focus",
@@ -74,7 +74,6 @@ class MainWindow(QWidget):
         self._overlay = BreakOverlayManager(self)
         self._overlay.set_custom_ideas(self._config.ideas)
         self._overlay.math_unlocked.connect(self._on_math_unlocked)
-        self._overlay.important_chosen.connect(self._on_important)
         self._overlay.emergency_exit.connect(self._on_emergency_exit_break)
         self._force_break_active = False
         # Pause covers the screens with Run and Stop (Stop needs a math problem).
@@ -341,7 +340,7 @@ class MainWindow(QWidget):
 
     def _on_emergency_exit_break(self) -> None:
         """TESTING ONLY: the Emergency exit on the break screen. The break ends
-        now, with no math problem, and no unlock or Important is used. The timer
+        now, with no math problem, and no unlock is used. The timer
         waits on Focus until the user presses Start."""
         if not self._force_break_active:
             return
@@ -349,16 +348,6 @@ class MainWindow(QWidget):
         self._end_force_break()
         self._message_label.setText("Emergency exit (testing). Ready to focus?")
         self._refresh()
-
-    def _on_important(self) -> None:
-        """Important was pressed: the break keeps going, but at most 3 more
-        minutes."""
-        if not self._force_break_active:
-            return
-        self._usage.record_important()
-        self._timer.limit_remaining(IMPORTANT_BREAK_SECONDS)
-        self._overlay.mark_important_used()
-        self._refresh()  # shows the shorter clock on the break screen
 
     # ----- showing the state -----------------------------------------------
 

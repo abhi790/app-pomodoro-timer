@@ -49,7 +49,7 @@ Each tip has a background picture that matches its category. The picture changes
 - Alt+F4 and Esc do nothing.
 - If you click away, the window comes back to the front.
 
-There are no system tricks. Task Manager and Ctrl+Alt+Del still work. You can leave early only by solving a math problem or, when those are used up, with the Important button. See [05b-math-unlock.md](05b-math-unlock.md).
+There are no system tricks. Task Manager and Ctrl+Alt+Del still work. You can leave early only by solving a math problem (3 times a day). After those are used up, the break runs its full time. See [05b-math-unlock.md](05b-math-unlock.md).
 
 While the break is on, Start, Reset and Settings in the main window are locked.
 

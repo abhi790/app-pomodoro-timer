@@ -6,7 +6,7 @@ from unittest import mock
 # Run without a real screen if nobody chose a Qt platform already.
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QPushButton
 
 from pomodoro import lock_rules
 from pomodoro.ideas import CREATIVE_IDEAS, IDEA_CATEGORY, IdeaRotator
@@ -96,22 +96,41 @@ class UnlockSignalsTest(unittest.TestCase):
         manager._overlays[0].math_solved.emit()
         self.assertEqual(got, [1])
 
-    def test_the_important_button_reaches_the_main_window(self):
+    def test_there_is_no_important_signal_any_more(self):
         manager = make_manager()
         self.addCleanup(manager.hide)
-        got = []
-        manager.important_chosen.connect(lambda: got.append(1))
         manager.show("10:00", 0)
-        manager._overlays[0].important_chosen.emit()
-        self.assertEqual(got, [1])
+        overlay = manager._overlays[0]
+        for thing in (manager, overlay, overlay._panel):
+            self.assertFalse(hasattr(thing, "important_chosen"), type(thing).__name__)
+        self.assertFalse(hasattr(manager, "mark_important_used"))
 
-    def test_with_no_math_left_the_screen_offers_important(self):
+    def test_with_no_math_left_the_screen_has_no_way_out_button(self):
         manager = make_manager()
         self.addCleanup(manager.hide)
         manager.show("10:00", 0)
         panel = manager._overlays[0]._panel
         self.assertFalse(panel._leave_button.isVisibleTo(panel))
-        self.assertTrue(panel._important_button.isVisibleTo(panel))
+        for button in panel.findChildren(QPushButton):
+            self.assertNotIn("important", button.text().lower())
+            self.assertFalse(button.isVisibleTo(panel), button.text())
+
+    def test_with_no_math_left_the_screen_says_the_break_goes_on(self):
+        manager = make_manager()
+        self.addCleanup(manager.hide)
+        manager.show("10:00", 0)
+        text = manager._overlays[0]._panel._status_label.text()
+        self.assertIn("No math unlocks left today", text)
+        self.assertNotIn("Important", text)
+
+    def test_the_unlock_state_is_only_about_math(self):
+        manager = make_manager()
+        self.addCleanup(manager.hide)
+        manager.show("10:00", 3)
+        overlay = manager._overlays[0]
+        overlay.set_unlock_state(2)
+        self.assertIn("2 of 3", overlay._panel._status_label.text())
+        self.assertTrue(overlay._panel._leave_button.isVisibleTo(overlay._panel))
 
     def test_with_the_testing_flag_off_there_is_no_emergency_exit(self):
         # The Emergency exit is a testing aid (see tests/test_emergency_exit.py).

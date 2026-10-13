@@ -2,13 +2,13 @@
 
 The panel has two pages:
 
-* the menu: either "Leave break early" (while math unlocks are left today)
-  or, when they are used up, the "Important" button
+* the menu: "Leave break early" while math unlocks are left today. When they
+  are used up, the button goes away and the break simply runs its full length
 * the quiz: a math problem, a box for the answer, Check and Back
 
 The panel only shows things and sends signals. It does not count anything and
 does not touch the timer. The main window listens to ``math_solved`` and
-``important_chosen`` and decides what happens.
+decides what happens.
 """
 
 from typing import Optional
@@ -25,19 +25,17 @@ from PySide6.QtWidgets import (
 )
 
 from pomodoro.math_quiz import Problem, ProblemMaker, is_correct
-from pomodoro.usage import DAILY_MATH_LIMIT, IMPORTANT_BREAK_SECONDS
+from pomodoro.usage import DAILY_MATH_LIMIT
 
 PANEL_MIN_WIDTH = 520
 PANEL_MAX_WIDTH = 640
 # The menu and the quiz have about the same height, so the clock above does
 # not jump when you switch between them.
 PANEL_MIN_HEIGHT = 230
-IMPORTANT_MINUTES = IMPORTANT_BREAK_SECONDS // 60
 
 
 class UnlockPanel(QWidget):
     math_solved = Signal()
-    important_chosen = Signal()
 
     def __init__(self, maker: Optional[ProblemMaker] = None) -> None:
         super().__init__()
@@ -49,7 +47,6 @@ class UnlockPanel(QWidget):
         self._maker = maker or ProblemMaker()
         self._problem: Optional[Problem] = None
         self._math_left = DAILY_MATH_LIMIT
-        self._important_used = False
 
         # ----- page 1: the menu ---------------------------------------------
         self._menu = QWidget()
@@ -58,18 +55,13 @@ class UnlockPanel(QWidget):
         self._status_label.setObjectName("overlayHint")
         self._status_label.setWordWrap(True)
         self._leave_button = QPushButton("Leave break early (solve a math problem)")
-        self._important_button = QPushButton(
-            f"Important: shorten the break to {IMPORTANT_MINUTES} minutes"
-        )
-        for button in (self._leave_button, self._important_button):
-            button.setMinimumHeight(52)
+        self._leave_button.setMinimumHeight(52)
 
         menu_layout = QVBoxLayout(self._menu)
         menu_layout.setContentsMargins(0, 0, 0, 0)
         menu_layout.setSpacing(12)
         menu_layout.addWidget(self._status_label)
         menu_layout.addWidget(self._leave_button)
-        menu_layout.addWidget(self._important_button)
 
         # ----- page 2: the quiz ---------------------------------------------
         self._quiz = QWidget()
@@ -113,7 +105,6 @@ class UnlockPanel(QWidget):
         self._quiz.hide()
 
         self._leave_button.clicked.connect(self._show_quiz)
-        self._important_button.clicked.connect(self.important_chosen)
         self._back_button.clicked.connect(self._show_menu)
         self._check_button.clicked.connect(self._on_check)
         self._answer_edit.returnPressed.connect(self._on_check)
@@ -122,10 +113,9 @@ class UnlockPanel(QWidget):
 
     # ----- what the overlay calls ------------------------------------------
 
-    def set_state(self, math_left: int, important_used: bool) -> None:
-        """Say how many math unlocks are left and if Important was used."""
+    def set_state(self, math_left: int) -> None:
+        """Say how many math unlocks are left today."""
         self._math_left = math_left
-        self._important_used = important_used
         self._refresh_menu()
         if math_left <= 0 and self._quiz.isVisible():
             self._show_menu()
@@ -135,16 +125,10 @@ class UnlockPanel(QWidget):
     def _refresh_menu(self) -> None:
         has_math = self._math_left > 0
         self._leave_button.setVisible(has_math)
-        self._important_button.setVisible(not has_math and not self._important_used)
         if has_math:
             text = f"Math unlocks left today: {self._math_left} of {DAILY_MATH_LIMIT}"
-        elif self._important_used:
-            text = f"The break is now {IMPORTANT_MINUTES} minutes at most. Hang in there."
         else:
-            text = (
-                "No math unlocks left today. "
-                "If something really cannot wait, use Important."
-            )
+            text = "No math unlocks left today. This break runs its full time."
         self._status_label.setText(text)
 
     def _show_menu(self) -> None:
