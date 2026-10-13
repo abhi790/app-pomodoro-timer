@@ -6,7 +6,7 @@ The Force Break screen has no close button. There is one way out before the brea
 
 At the bottom of the break screen you see **Leave break early (solve a math problem)** and how many unlocks are left today ("2 of 3").
 
-1. Press the button. A problem appears, like `47 + 38 = ?` or `7 × 8 = ?`.
+1. Press the button. A problem appears, like `47 + 38 + 25 = ?` (see the levels below).
 2. Type the answer and press **Enter** (or **Check**).
 3. **Right answer:** the break ends right away. The timer waits on Focus, and you press **Start** when you are ready.
 4. **Wrong answer:** you get a new problem. A wrong answer does not use up an unlock.
@@ -14,7 +14,21 @@ At the bottom of the break screen you see **Leave break early (solve a math prob
 
 Only a *solved* problem counts. You have 3 of them each day.
 
-The problems are easy but need a moment of thought: adding two numbers from 10 to 99, taking a smaller number from a bigger one, and times tables from 3 to 12.
+## The three levels
+
+The problems need a moment of thought, so nobody solves one by reflex. They get **harder with every unlock you use in a day**, and the screen tells you the level of the next one ("next problem: level 2 of 3"):
+
+| Unlock of the day | Level | What it is | Examples |
+|---|---|---|---|
+| 1st | 1 | Two additions (sometimes one subtraction), two-digit numbers | `47 + 38 + 25`, `60 + 25 - 18` |
+| 2nd | 2 | Two multiplications, times tables up to 12 | `4 × 6 × 7`, `7 × 8 + 6 × 4`, `9 × 8 - 5 × 7` |
+| 3rd | 3 | A mix, with brackets and 3 or more signs | `(12 + 8) × 5 - 9`, `20 + 6 × 7 - 9`, `4 × 6 + 7 × 5 + 18` |
+
+- Times is worked out before plus and minus, like in school. Brackets first.
+- The answer is always a whole number from 1 up (and at most 600), and no step on the way goes below zero.
+- A wrong answer gives a new problem of the **same level**.
+- The pause screen (Stop) uses the same levels, because it spends the same unlock.
+- The level follows the daily count in `usage.json`. After midnight you start at level 1 again.
 
 ## When the 3 unlocks are used up
 
@@ -53,8 +67,10 @@ The test buttons are gone. The real thing happens in both modes (Pomodoro and Cu
 
 | File | What it does |
 |---|---|
-| `src/pomodoro/math_quiz.py` | Makes the problems and checks answers (no windows, has tests) |
+| `src/pomodoro/math_quiz.py` | Makes the problems of the 3 levels and checks answers (no windows, has tests) |
 | `src/pomodoro/usage.py` | The daily count, saving, midnight reset (no windows, has tests) |
 | `src/pomodoro/timer_logic.py` | `skip()` ends the break |
-| `src/pomodoro/ui/unlock_panel.py` | The buttons and the quiz on the break screen |
+| `src/pomodoro/ui/unlock_panel.py` | The buttons and the quiz on the break screen (asks for the level of the next unlock) |
+| `src/pomodoro/ui/pause_overlay.py` | The same quiz on the pause screen |
+| `tests/test_math_quiz.py`, `tests/test_math_levels_ui.py` | Tests for the levels |
 | `src/pomodoro/ui/main_window.py` | Counts the unlock and changes the timer |

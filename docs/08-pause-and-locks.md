@@ -13,7 +13,7 @@ A real Pomodoro is not something you fiddle with halfway. In the classic techniq
 **Pause** does not quietly stop the clock any more. It covers every monitor with the **pause screen**. The clock stands still and you choose:
 
 - **Run (carry on focusing):** the screen goes away and the clock carries on from where it stopped. It costs nothing.
-- **Stop (solve a math problem):** you give this focus block up. A math problem appears, like in a break. When you solve it:
+- **Stop (solve a math problem):** you give this focus block up. A math problem appears, like in a break (the level goes up with every unlock used today, see [05b-math-unlock.md](05b-math-unlock.md)). When you solve it:
   - the block does **not count** as a pomodoro (the ones you already finished stay counted),
   - the timer goes back to a fresh focus block and waits for **Start**,
   - it uses **one of the 3 daily math unlocks**, the same ones that end a break early.

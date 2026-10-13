@@ -42,7 +42,7 @@ from PySide6.QtWidgets import (
 from pomodoro.backgrounds import BackgroundPicker
 from pomodoro.fit_text import pick_font_px
 from pomodoro.lock_rules import can_stop
-from pomodoro.math_quiz import Problem, ProblemMaker, is_correct
+from pomodoro.math_quiz import MAX_LEVEL, Problem, ProblemMaker, is_correct, level_for_unlock
 from pomodoro.tips import CATEGORY_TITLE, Tip, TipRotator, tip_display_seconds
 from pomodoro.ui.break_overlay import FADE_MS, TIP_MAX_WIDTH, Scene
 from pomodoro.ui.emergency_exit import make_emergency_button, place_in_corner
@@ -267,7 +267,8 @@ class PauseOverlay(QWidget):
         self._stop_button.setVisible(stop_allowed)
         if stop_allowed:
             text = (
-                f"Math unlocks left today: {math_left} of {DAILY_MATH_LIMIT}. "
+                f"Math unlocks left today: {math_left} of {DAILY_MATH_LIMIT} "
+                f"(next problem: level {self._level()} of {MAX_LEVEL}). "
                 "Stopping gives this focus block up and uses one."
             )
         else:
@@ -296,8 +297,12 @@ class PauseOverlay(QWidget):
         self._quiz.show()
         self._answer_edit.setFocus()
 
+    def _level(self) -> int:
+        """The problems get harder with every unlock used today."""
+        return level_for_unlock(DAILY_MATH_LIMIT - self._math_left)
+
     def _new_problem(self) -> None:
-        self._problem = self._maker.next_problem()
+        self._problem = self._maker.next_problem(self._level())
         self._problem_label.setText(f"{self._problem.text} = ?")
         self._answer_edit.clear()
         self._answer_edit.setFocus()

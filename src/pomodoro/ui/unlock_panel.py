@@ -24,7 +24,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from pomodoro.math_quiz import Problem, ProblemMaker, is_correct
+from pomodoro.math_quiz import MAX_LEVEL, Problem, ProblemMaker, is_correct, level_for_unlock
 from pomodoro.usage import DAILY_MATH_LIMIT
 
 PANEL_MIN_WIDTH = 520
@@ -126,7 +126,10 @@ class UnlockPanel(QWidget):
         has_math = self._math_left > 0
         self._leave_button.setVisible(has_math)
         if has_math:
-            text = f"Math unlocks left today: {self._math_left} of {DAILY_MATH_LIMIT}"
+            text = (
+                f"Math unlocks left today: {self._math_left} of {DAILY_MATH_LIMIT} "
+                f"(next problem: level {self._level()} of {MAX_LEVEL})"
+            )
         else:
             text = "No math unlocks left today. This break runs its full time."
         self._status_label.setText(text)
@@ -145,8 +148,12 @@ class UnlockPanel(QWidget):
         self._quiz.show()
         self._answer_edit.setFocus()
 
+    def _level(self) -> int:
+        """The problems get harder with every unlock used today."""
+        return level_for_unlock(DAILY_MATH_LIMIT - self._math_left)
+
     def _new_problem(self) -> None:
-        self._problem = self._maker.next_problem()
+        self._problem = self._maker.next_problem(self._level())
         self._problem_label.setText(f"{self._problem.text} = ?")
         self._answer_edit.clear()
         self._answer_edit.setFocus()
