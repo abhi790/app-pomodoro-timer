@@ -77,6 +77,8 @@ class SettingsDialog(QDialog):
         self._custom = config.custom
         self._sound = sound or AlertSound(self)
         self._sound_file = config.sound_file
+        # Day or Night is chosen on the main window; Save must not undo it.
+        self._appearance = config.appearance
 
         self._mode_box = QComboBox()
         for mode in Mode:
@@ -319,4 +321,5 @@ class SettingsDialog(QDialog):
             ideas=ideas_from_text(self._ideas_edit.toPlainText()),
             sound_enabled=self._sound_check.isChecked(),
             sound_file=self._sound_file,
+            appearance=self._appearance,
         )

@@ -36,6 +36,7 @@ from PySide6.QtWidgets import (
 
 from pomodoro.ideas import IDEA_CATEGORY, IDEA_TITLE
 from pomodoro.tips import CATEGORY_TITLE, Tip
+from pomodoro.ui.theme import SCREEN_STYLE
 from pomodoro.ui.unlock_panel import UnlockPanel
 
 FADE_MS = 1200
@@ -117,6 +118,8 @@ class BreakOverlay(QWidget):
 
         self.setWindowTitle("Break time")
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+        # Always dark, even in Day mode: white text over a picture.
+        self.setStyleSheet(SCREEN_STYLE)
 
         title = QLabel("Break time", alignment=Qt.AlignCenter)
         title.setObjectName("overlayTitle")

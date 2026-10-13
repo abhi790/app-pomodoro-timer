@@ -18,6 +18,7 @@ A Pomodoro timer helps you focus. You work for a fixed block of time (a "pomodor
 - **Creative breaks:** the long break suggests something fun and creative, not studying (sketch, play music, go for a walk, write a poem...). You can add your own ideas in Settings.
 - **A real Pomodoro, not a toy:** while the timer runs, Reset and Settings are locked. Pause covers the screen with Run and Stop. Stop needs a math problem (one of the 3 daily unlocks) and the interrupted block does not count. With no unlocks left, you can only Run.
 - **Tray icon:** the app lives in the system tray. Hover to see the time left, close the window and the timer keeps running, and use **Quit** in the tray menu to close it for real.
+- **Day and Night look:** a small button in the corner of the window switches between the dark Night look and a light Day look. The app remembers your choice. The break and pause screens always stay dark.
 - **Light and simple:** no account, no internet, no ads.
 
 ## Tech stack
@@ -66,6 +67,7 @@ app-pomodoro-timer/
 - [x] Step 6: creative long-break suggestions (with your own ideas)
 - [x] Step 7a: alert sound (a default chime, or your own `.wav`)
 - [x] Step 7b: tray icon (the timer keeps running when you close the window)
+- [x] Step 9: Day and Night look (a switch in the main window, remembered)
 - [ ] Step 7c: a Windows `.exe`
 
 ## Run the tests

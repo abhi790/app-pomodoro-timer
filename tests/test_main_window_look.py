@@ -44,9 +44,10 @@ class MainWindowLookTest(unittest.TestCase):
     def test_the_theme_has_a_style_for_the_main_button(self):
         self.assertIn("QPushButton#primary", APP_STYLE)
 
-    def test_the_timer_is_centered_between_the_top_and_the_buttons(self):
+    def test_the_timer_is_centered_between_the_corner_button_and_the_buttons(self):
         w = self.window
-        free_above = w._phase_label.geometry().top()
+        # The small Day / Night switch is at the top, so measure from under it.
+        free_above = w._phase_label.geometry().top() - w._look_button.geometry().bottom()
         free_below = w._toggle_button.geometry().top() - w._message_label.geometry().bottom()
         self.assertLessEqual(
             abs(free_above - free_below),

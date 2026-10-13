@@ -17,7 +17,8 @@ def main() -> int:
     # go, so the app must not quit just because no window is open.
     app.setQuitOnLastWindowClosed(False)
     app.setWindowIcon(make_app_icon())  # window corner, taskbar, Alt+Tab
-    apply_theme(app)
-    window = MainWindow(load_config())
+    config = load_config()
+    apply_theme(app, config.appearance)  # Night or Day, as you left it
+    window = MainWindow(config)
     window.show()
     return app.exec()

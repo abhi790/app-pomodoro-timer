@@ -5,6 +5,7 @@ state on screen and passes button clicks to the timer.
 """
 
 import time
+from dataclasses import replace
 from typing import Optional
 
 from PySide6.QtCore import Qt, QTimer
@@ -18,6 +19,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from pomodoro.appearance import switch_label, toggled
 from pomodoro.formatting import format_clock
 from pomodoro.lock_rules import controls_enabled
 from pomodoro.settings import MODE_NAME, AppConfig, save_config
@@ -27,6 +29,7 @@ from pomodoro.ui.break_manager import BreakOverlayManager
 from pomodoro.ui.pause_overlay import PauseCoverManager
 from pomodoro.ui.settings_dialog import SettingsDialog
 from pomodoro.ui.sound_player import AlertSound
+from pomodoro.ui.theme import apply_theme
 from pomodoro.ui.tray import TrayIcon
 from pomodoro.usage import IMPORTANT_BREAK_SECONDS, UsageTracker
 
@@ -127,6 +130,15 @@ class MainWindow(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(32, 32, 32, 32)
         layout.setSpacing(14)
+        # The Day / Night switch, small, in the top right corner.
+        self._look_button = QPushButton(switch_label(self._config.appearance))
+        self._look_button.setObjectName("themeToggle")
+        self._look_button.setCursor(Qt.PointingHandCursor)
+        self._look_button.clicked.connect(self._on_look_switch)
+        corner = QHBoxLayout()
+        corner.addStretch(1)
+        corner.addWidget(self._look_button)
+        layout.addLayout(corner)
         # Equal stretch above and below, so the timer sits in the middle and
         # does not hang at the top with a big hole above the buttons.
         layout.addStretch(1)
@@ -191,6 +203,18 @@ class MainWindow(QWidget):
         self._timer.reset()
         self._message_label.setText("")
         self._refresh()
+
+    def _on_look_switch(self) -> None:
+        """Day or Night: every window changes at once and the choice is saved.
+        It is only a look, so it works any time and never touches the timer."""
+        appearance = toggled(self._config.appearance)
+        self._config = replace(self._config, appearance=appearance)
+        apply_theme(QApplication.instance(), appearance)
+        self._look_button.setText(switch_label(appearance))
+        try:
+            save_config(self._config)
+        except OSError:
+            self._message_label.setText("Could not save your settings.")
 
     def _on_settings(self) -> None:
         if not self._controls_enabled():

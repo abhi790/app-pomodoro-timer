@@ -45,6 +45,7 @@ from pomodoro.lock_rules import can_stop
 from pomodoro.math_quiz import Problem, ProblemMaker, is_correct
 from pomodoro.tips import CATEGORY_TITLE, Tip, TipRotator, tip_display_seconds
 from pomodoro.ui.break_overlay import FADE_MS, TIP_MAX_WIDTH, Scene
+from pomodoro.ui.theme import SCREEN_STYLE
 from pomodoro.usage import DAILY_MATH_LIMIT
 
 KEEP_ON_TOP_MS = 500
@@ -75,6 +76,8 @@ class PauseOverlay(QWidget):
 
         self.setWindowTitle("Paused")
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+        # Always dark, even in Day mode: white text over a picture.
+        self.setStyleSheet(SCREEN_STYLE)
 
         title = QLabel("Paused", alignment=Qt.AlignCenter)
         title.setObjectName("overlayTitle")

@@ -23,6 +23,7 @@ The countdown also appears in the window title (for example `29:59 - Focus`), so
 ## How it looks
 
 - The timer block (phase, countdown, count, mode, message) sits in the **middle** of the window, with the same free space above and below it. It does not hang at the top any more.
+- A small **Day mode / Night mode** button in the top right corner switches the look, see [09-day-night.md](09-day-night.md).
 - **Start / Pause** is the main button, filled with the blue accent color. **Reset** and **Settings** are plain buttons, so the one you press most is easy to find. The colors live in `src/pomodoro/ui/theme.py` (`QPushButton#primary`).
 - `tests/test_main_window_look.py` checks both things.
 

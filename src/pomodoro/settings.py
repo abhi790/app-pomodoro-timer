@@ -23,6 +23,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Optional, Tuple
 
+from pomodoro.appearance import Appearance, appearance_from_name
 from pomodoro.ideas import clean_ideas
 from pomodoro.timer_logic import TimerSettings
 
@@ -88,6 +89,8 @@ class AppConfig:
     # (empty means the built-in chime).
     sound_enabled: bool = True
     sound_file: str = ""
+    # Night (dark, the old look) or Day (light). See appearance.py.
+    appearance: Appearance = Appearance.NIGHT
 
     def __post_init__(self) -> None:
         # Custom times always stay inside the limits, whoever built the config.
@@ -106,6 +109,7 @@ class AppConfig:
             "ideas": list(self.ideas),
             "sound_enabled": self.sound_enabled,
             "sound_file": self.sound_file,
+            "appearance": self.appearance.value,
         }
 
     @classmethod
@@ -133,6 +137,8 @@ class AppConfig:
             ideas=clean_ideas(data.get("ideas", ())),
             sound_enabled=sound_enabled,
             sound_file=sound_file.strip(),
+            # Missing or unknown means Night; it never loses the other settings.
+            appearance=appearance_from_name(data.get("appearance")),
         )
 
 

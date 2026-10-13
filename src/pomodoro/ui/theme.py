@@ -6,22 +6,29 @@ Change the look here and every window follows. Sizes are in pixels.
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication
 
+from pomodoro.appearance import NIGHT_PALETTE, Appearance, Palette, palette_for
+
 FONT_FAMILY = "Segoe UI"
 
-BACKGROUND = "#17171c"
-SURFACE = "#26262f"
-SURFACE_HOVER = "#31313d"
-SURFACE_PRESSED = "#3a3a49"
-BORDER = "#3a3a48"
-TEXT = "#f4f4f7"
-TEXT_MUTED = "#a3a3b3"
-TEXT_DISABLED = "#6c6c7a"
-ACCENT = "#4c8dff"
-ACCENT_HOVER = "#6aa1ff"
-ACCENT_PRESSED = "#3a78e6"
 BREAK_GREEN = "#3c9d5d"
 
-APP_STYLE = f"""
+
+def build_style(palette: Palette) -> str:
+    """The style sheet of the whole app, in the colors of one look (Night or
+    Day, see ``appearance.py``)."""
+    BACKGROUND = palette.background
+    SURFACE = palette.surface
+    SURFACE_HOVER = palette.surface_hover
+    SURFACE_PRESSED = palette.surface_pressed
+    BORDER = palette.border
+    TEXT = palette.text
+    TEXT_MUTED = palette.text_muted
+    TEXT_DISABLED = palette.text_disabled
+    ACCENT = palette.accent
+    ACCENT_HOVER = palette.accent_hover
+    ACCENT_PRESSED = palette.accent_pressed
+    ON_ACCENT = palette.on_accent
+    return f"""
 QWidget {{
     background-color: {BACKGROUND};
     color: {TEXT};
@@ -168,7 +175,7 @@ QPushButton:disabled {{
 QPushButton#primary {{
     background-color: {ACCENT};
     border: 1px solid {ACCENT};
-    color: #ffffff;
+    color: {ON_ACCENT};
 }}
 
 QPushButton#primary:hover {{
@@ -185,6 +192,13 @@ QPushButton#primary:disabled {{
     color: {TEXT_DISABLED};
     background-color: {BACKGROUND};
     border: 1px solid {SURFACE};
+}}
+
+/* The small Day / Night switch in the corner of the main window. */
+QPushButton#themeToggle {{
+    padding: 6px 16px;
+    border-radius: 16px;
+    font-size: 15px;
 }}
 
 /* Buttons on the pause screen sit on top of a picture, so they are a little
@@ -233,7 +247,16 @@ QComboBox QAbstractItemView {{
 """
 
 
-def apply_theme(app: QApplication) -> None:
-    """Use the app-wide font and colors."""
+# The look the app had before Day mode existed (and the default).
+APP_STYLE = build_style(NIGHT_PALETTE)
+
+# The full-screen break and pause screens always use this dark style, in both
+# looks: they show white text over a picture.
+SCREEN_STYLE = APP_STYLE
+
+
+def apply_theme(app: QApplication, appearance: Appearance = Appearance.NIGHT) -> None:
+    """Use the app-wide font and the colors of the chosen look. Can be called
+    again at any time: every window changes at once."""
     app.setFont(QFont(FONT_FAMILY, 12))
-    app.setStyleSheet(APP_STYLE)
+    app.setStyleSheet(build_style(palette_for(appearance)))
