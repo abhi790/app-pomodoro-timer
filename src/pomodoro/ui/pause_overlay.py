@@ -4,8 +4,8 @@ Pause does not just stop the clock. It covers every monitor with this screen,
 which has two choices:
 
 * **Run:** carry on focusing, the clock continues from where it stopped.
-* **Stop:** give this focus block up. This needs a math problem (one of the 3
-  daily math unlocks). With none left, Stop is not offered, only Run.
+* **Stop:** give this focus block up. This always needs a math problem first,
+  with no daily cap: solve it and the block is given up.
 
 While you decide, the screen shows the same healthy tips and background
 pictures as the break screen, so a pause is a small moment of rest too.
@@ -41,13 +41,11 @@ from PySide6.QtWidgets import (
 
 from pomodoro.backgrounds import BackgroundPicker
 from pomodoro.fit_text import pick_font_px
-from pomodoro.lock_rules import can_stop
 from pomodoro.math_quiz import MAX_LEVEL, Problem, ProblemMaker, is_correct, level_for_unlock
 from pomodoro.tips import CATEGORY_TITLE, Tip, TipRotator, tip_display_seconds
 from pomodoro.ui.break_overlay import FADE_MS, TIP_MAX_WIDTH, Scene
 from pomodoro.ui.emergency_exit import make_emergency_button, place_in_corner
 from pomodoro.ui.theme import SCREEN_STYLE
-from pomodoro.usage import DAILY_MATH_LIMIT
 
 KEEP_ON_TOP_MS = 500
 PANEL_WIDTH = 520
@@ -74,7 +72,7 @@ class PauseOverlay(QWidget):
         self._blend = 1.0
         self._maker = maker or ProblemMaker()
         self._problem: Optional[Problem] = None
-        self._math_left = 0
+        self._math_used = 0
 
         self.setWindowTitle("Paused")
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
@@ -202,7 +200,7 @@ class PauseOverlay(QWidget):
         self._check_button.clicked.connect(self._on_check)
         self._answer_edit.returnPressed.connect(self._on_check)
 
-        self.set_math_left(0)
+        self.set_math_used(0)
 
     # ----- what the manager calls -----------------------------------------
 
@@ -259,23 +257,14 @@ class PauseOverlay(QWidget):
         label.setStyleSheet(f"font-size: {size}px;")
         label.ensurePolished()
 
-    def set_math_left(self, math_left: int) -> None:
-        """Say how many math unlocks are left today. With none, there is no
-        Stop button, only Run."""
-        self._math_left = math_left
-        stop_allowed = can_stop(math_left)
-        self._stop_button.setVisible(stop_allowed)
-        if stop_allowed:
-            text = (
-                f"Math unlocks left today: {math_left} of {DAILY_MATH_LIMIT} "
-                f"(next problem: level {self._level()} of {MAX_LEVEL}). "
-                "Stopping gives this focus block up and uses one."
-            )
-        else:
-            text = "No math unlocks left today, so this focus block must go on."
-        self._status_label.setText(text)
-        if not stop_allowed and self._quiz.isVisible():
-            self._show_menu()
+    def set_math_used(self, math_used: int) -> None:
+        """Say how many math problems have been solved today (sets the level
+        of the next one; Stop is always offered)."""
+        self._math_used = math_used
+        self._status_label.setText(
+            f"Stopping gives this focus block up and needs a math problem "
+            f"(next: level {self._level()} of {MAX_LEVEL})."
+        )
 
     def close_for_real(self) -> None:
         """Close the window. Only the manager calls this."""
@@ -298,8 +287,8 @@ class PauseOverlay(QWidget):
         self._answer_edit.setFocus()
 
     def _level(self) -> int:
-        """The problems get harder with every unlock used today."""
-        return level_for_unlock(DAILY_MATH_LIMIT - self._math_left)
+        """The problems get harder with every one solved today."""
+        return level_for_unlock(self._math_used)
 
     def _new_problem(self) -> None:
         self._problem = self._maker.next_problem(self._level())
@@ -383,7 +372,7 @@ class PauseCoverManager(QObject):
         self._picker = picker or BackgroundPicker()
         self._overlays: list = []
         self._clock_text = ""
-        self._math_left = 0
+        self._math_used = 0
         self._tip: Optional[Tip] = None
         self._image: Optional[Path] = None
 
@@ -404,12 +393,12 @@ class PauseCoverManager(QObject):
     def is_active(self) -> bool:
         return bool(self._overlays)
 
-    def show(self, clock_text: str, math_left: int) -> None:
+    def show(self, clock_text: str, math_used: int) -> None:
         """Open the pause screens (does nothing new if already open)."""
         self._clock_text = clock_text
         if self.is_active:
             return
-        self._math_left = math_left
+        self._math_used = math_used
         self._choose_tip()
         self._open_overlays()
         self._keep_on_top.start()
@@ -443,7 +432,7 @@ class PauseCoverManager(QObject):
             overlay.setGeometry(screen.geometry())
             overlay.set_clock(self._clock_text)
             overlay.set_tip(self._tip, self._image, animate=False)
-            overlay.set_math_left(self._math_left)
+            overlay.set_math_used(self._math_used)
             overlay.run_chosen.connect(self.run_chosen)
             overlay.math_solved.connect(self.stop_confirmed)
             overlay.emergency_exit.connect(self.emergency_exit)

@@ -2,8 +2,8 @@
 
 The panel has two pages:
 
-* the menu: "Leave break early" while math unlocks are left today. When they
-  are used up, the button goes away and the break simply runs its full length
+* the menu: "Leave break early", always offered. Solving the math problem
+  always ends the break, however many times that happens in a day.
 * the quiz: a math problem, a box for the answer, Check and Back
 
 The panel only shows things and sends signals. It does not count anything and
@@ -25,7 +25,6 @@ from PySide6.QtWidgets import (
 )
 
 from pomodoro.math_quiz import MAX_LEVEL, Problem, ProblemMaker, is_correct, level_for_unlock
-from pomodoro.usage import DAILY_MATH_LIMIT
 
 PANEL_MIN_WIDTH = 520
 PANEL_MAX_WIDTH = 640
@@ -46,7 +45,7 @@ class UnlockPanel(QWidget):
 
         self._maker = maker or ProblemMaker()
         self._problem: Optional[Problem] = None
-        self._math_left = DAILY_MATH_LIMIT
+        self._math_used = 0
 
         # ----- page 1: the menu ---------------------------------------------
         self._menu = QWidget()
@@ -113,25 +112,16 @@ class UnlockPanel(QWidget):
 
     # ----- what the overlay calls ------------------------------------------
 
-    def set_state(self, math_left: int) -> None:
-        """Say how many math unlocks are left today."""
-        self._math_left = math_left
+    def set_state(self, math_used: int) -> None:
+        """Say how many math problems have been solved today (sets the level
+        of the next one; the leave-early button is always offered)."""
+        self._math_used = math_used
         self._refresh_menu()
-        if math_left <= 0 and self._quiz.isVisible():
-            self._show_menu()
 
     # ----- the menu --------------------------------------------------------
 
     def _refresh_menu(self) -> None:
-        has_math = self._math_left > 0
-        self._leave_button.setVisible(has_math)
-        if has_math:
-            text = (
-                f"Math unlocks left today: {self._math_left} of {DAILY_MATH_LIMIT} "
-                f"(next problem: level {self._level()} of {MAX_LEVEL})"
-            )
-        else:
-            text = "No math unlocks left today. This break runs its full time."
+        text = f"Solve a math problem to leave early (next: level {self._level()} of {MAX_LEVEL})."
         self._status_label.setText(text)
 
     def _show_menu(self) -> None:
@@ -149,8 +139,8 @@ class UnlockPanel(QWidget):
         self._answer_edit.setFocus()
 
     def _level(self) -> int:
-        """The problems get harder with every unlock used today."""
-        return level_for_unlock(DAILY_MATH_LIMIT - self._math_left)
+        """The problems get harder with every one solved today."""
+        return level_for_unlock(self._math_used)
 
     def _new_problem(self) -> None:
         self._problem = self._maker.next_problem(self._level())

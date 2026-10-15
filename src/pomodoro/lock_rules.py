@@ -6,10 +6,11 @@ A real Pomodoro is not something you fiddle with halfway. So:
 * Pause does not just stop the clock. It covers the screens with the pause
   screen, where you choose Run (carry on) or Stop (give the block up, after a
   math problem). While that screen is up, everything else stays locked too.
-* Stop needs a math problem, and it uses one of the 3 daily math unlocks (the
-  same ones that end a break early). With none left, Stop is not offered: you
-  can only Run.
-* During a Force Break everything is locked, as before.
+* Stop always needs a math problem first, every time, with no daily cap: solve
+  it and the pause screen closes, however many times that happens in a day.
+* During a Force Break everything is locked, as before. Leaving a break early
+  works the same way: there is no cap on how many times a day you can solve
+  the math problem to end a break or stop a focus block.
 """
 
 
@@ -34,8 +35,3 @@ def controls_enabled(
     pause screen is up.
     """
     return not (running or break_active or pause_cover_active)
-
-
-def can_stop(math_left: int) -> bool:
-    """Stop (leaving a focus block early) needs a math unlock to spend."""
-    return math_left > 0

@@ -20,7 +20,7 @@ from pomodoro.tips import CATEGORY_TITLE, HEALTHY_TIPS, Tip, TipRotator
 from pomodoro.ui.main_window import MainWindow
 from pomodoro.ui.pause_overlay import PauseCoverManager, PauseOverlay
 from pomodoro.ui.theme import apply_theme
-from pomodoro.usage import DAILY_MATH_LIMIT, UsageTracker
+from pomodoro.usage import UsageTracker
 from tests.test_tray_ui import FakeSound, FakeTray
 
 _app = QApplication.instance() or QApplication([])
@@ -121,12 +121,12 @@ class PauseWindowTest(unittest.TestCase):
         overlay.close()
         self.assertTrue(overlay.isVisible())
 
-    def test_the_pause_screen_shows_the_time_left_and_the_unlocks_left(self):
+    def test_the_pause_screen_shows_the_time_left_and_the_next_level(self):
         window, _ = self.make()
         self.start_and_pause(window, seconds=60)
         overlay = self.cover(window)
         self.assertEqual(overlay._clock_label.text(), window._clock_label.text())
-        self.assertIn(f"{DAILY_MATH_LIMIT} of {DAILY_MATH_LIMIT}", overlay._status_label.text())
+        self.assertIn("level 1 of 3", overlay._status_label.text())
 
     # ----- Run --------------------------------------------------------------
 
@@ -202,37 +202,36 @@ class PauseWindowTest(unittest.TestCase):
         self.assertTrue(overlay._menu.isVisibleTo(overlay))
         self.assertFalse(overlay._quiz.isVisibleTo(overlay))
 
-    def test_stop_uses_the_same_three_daily_unlocks_as_a_break(self):
+    def test_stop_uses_the_same_count_as_a_break(self):
         window, usage = self.make(math_used=2)
         self.start_and_pause(window)
         overlay = self.cover(window)
-        self.assertIn("1 of 3", overlay._status_label.text())
+        self.assertIn("level 3 of 3", overlay._status_label.text())
         self.solve(overlay)
-        self.assertEqual(usage.math_left, 0)
+        self.assertEqual(usage.math_used, 3)
 
-    # ----- no math left -----------------------------------------------------
+    # ----- no daily cap -------------------------------------------------------
 
-    def test_with_no_math_left_there_is_no_stop_button(self):
-        window, _ = self.make(math_used=DAILY_MATH_LIMIT)
+    def test_stop_is_always_offered_however_much_math_was_used_today(self):
+        window, _ = self.make(math_used=10)
         self.start_and_pause(window)
         overlay = self.cover(window)
-        self.assertFalse(overlay._stop_button.isVisibleTo(overlay))
+        self.assertTrue(overlay._stop_button.isVisibleTo(overlay))
         self.assertTrue(overlay._run_button.isVisibleTo(overlay))
-        self.assertIn("No math unlocks left", overlay._status_label.text())
 
-    def test_with_no_math_left_run_still_works(self):
-        window, _ = self.make(math_used=DAILY_MATH_LIMIT)
+    def test_run_still_works_after_heavy_use(self):
+        window, _ = self.make(math_used=10)
         self.start_and_pause(window)
         self.cover(window)._run_button.click()
         self.assertTrue(window._timer.running)
 
-    def test_the_third_stop_removes_stop_from_the_next_pause(self):
+    def test_a_later_pause_still_offers_stop(self):
         window, usage = self.make(math_used=2)
         self.start_and_pause(window)
-        self.solve(self.cover(window))  # the third unlock
+        self.solve(self.cover(window))  # third solve today
         self.start_and_pause(window)
         overlay = self.cover(window)
-        self.assertFalse(overlay._stop_button.isVisibleTo(overlay))
+        self.assertTrue(overlay._stop_button.isVisibleTo(overlay))
 
     # ----- Quit and breaks --------------------------------------------------
 

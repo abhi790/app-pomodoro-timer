@@ -1,13 +1,16 @@
-"""The daily count of break unlocks, saved in a small file.
+"""The daily count of solved math problems, saved in a small file.
 
 No windows here, so it is easy to test. One number is kept for today:
-``math_used``, how many times a math problem was solved to leave a break.
+``math_used``, how many times a math problem was solved to leave a break or
+stop a focus block. There is no cap: solving the problem always works, as
+many times a day as you need. The count only decides how hard the next
+problem is (see ``math_quiz.level_for_unlock``).
 (Older versions also kept ``important_used``. That button is gone. An old file
 that still has the number loads fine, and the number is ignored.)
 
 The count starts from zero on a new day (after midnight). It is saved in
-``usage.json``, next to ``settings.json``, so closing the app does not give
-back the unlocks. The file only says "today"; an old date means a fresh day.
+``usage.json``, next to ``settings.json``, so closing the app does not reset
+the day's level. The file only says "today"; an old date means a fresh day.
 
 Nothing here is a lock. Anyone can delete the file. It is just a promise to
 yourself that is kept by the app.
@@ -20,9 +23,6 @@ from pathlib import Path
 from typing import Callable, Optional
 
 from pomodoro.settings import config_path
-
-# How many times a day a math problem can end a break early.
-DAILY_MATH_LIMIT = 3
 
 
 @dataclass(frozen=True)
@@ -88,10 +88,6 @@ class UsageTracker:
     def math_used(self) -> int:
         self._roll_over_if_new_day()
         return self._usage.math_used
-
-    @property
-    def math_left(self) -> int:
-        return max(0, DAILY_MATH_LIMIT - self.math_used)
 
     # ----- changes ---------------------------------------------------------
 

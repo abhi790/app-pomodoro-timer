@@ -187,8 +187,8 @@ class BreakOverlay(QWidget):
     def set_clock(self, text: str) -> None:
         self._clock_label.setText(text)
 
-    def set_unlock_state(self, math_left: int) -> None:
-        self._panel.set_state(math_left)
+    def set_unlock_state(self, math_used: int) -> None:
+        self._panel.set_state(math_used)
 
     def set_tip(
         self,

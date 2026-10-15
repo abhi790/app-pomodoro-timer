@@ -1,9 +1,10 @@
 """Math problems for leaving a break early (and for stopping a focus block).
 
 No windows here, so it is easy to test. A problem is easy for a rested mind
-but needs a moment of thought, so nobody solves one by reflex. There are three
-levels. The level goes up with every unlock you use in a day, so the first
-problem of the day is the lightest and the third is the hardest:
+but needs a moment of thought, so nobody solves one by reflex. There is no
+daily cap: solving the problem always works. There are three levels, and the
+level goes up with every problem you solve in a day, so the first one is the
+lightest and the third (and every one after) is the hardest:
 
 * Level 1: two additions (or one subtraction)   47 + 38 + 25     60 + 25 - 18
 * Level 2: two multiplications                  4 x 6 x 7        7 x 8 + 6 x 4

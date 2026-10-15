@@ -83,12 +83,12 @@ class ScreenButtonTest(unittest.TestCase):
                 overlay._emergency_button.click()
                 self.assertEqual(got, [1], type(overlay).__name__)
 
-    def test_it_is_there_when_no_math_unlock_is_left(self):
+    def test_it_is_there_whatever_the_days_math_count(self):
         with flag(True):
             break_overlay = self.shown(BreakOverlay())
             pause_overlay = self.shown(PauseOverlay())
         break_overlay.set_unlock_state(0)
-        pause_overlay.set_math_left(0)
+        pause_overlay.set_math_used(0)
         self.assertTrue(break_overlay._emergency_button.isVisible())
         self.assertTrue(pause_overlay._emergency_button.isVisible())
 
@@ -97,7 +97,7 @@ class ScreenButtonTest(unittest.TestCase):
             break_overlay = self.shown(BreakOverlay())
             pause_overlay = self.shown(PauseOverlay())
         break_overlay.set_unlock_state(3)
-        pause_overlay.set_math_left(3)
+        pause_overlay.set_math_used(3)
         break_overlay._panel._leave_button.click()
         pause_overlay._stop_button.click()
         self.assertTrue(break_overlay._emergency_button.isVisible())
@@ -202,12 +202,12 @@ class MainWindowTest(unittest.TestCase):
         window._overlay._overlays[0]._emergency_button.click()
         self.assertEqual(usage.math_used, 1)
 
-    def test_on_the_break_it_works_even_with_no_math_unlock_left(self):
+    def test_on_the_break_it_works_however_much_math_was_used_today(self):
         window, usage, _ = self.make(math_used=3)
         self.end_focus(window)
         window._overlay._overlays[0]._emergency_button.click()
         self.assertFalse(window._overlay.is_active)
-        self.assertEqual(usage.math_left, 0)
+        self.assertEqual(usage.math_used, 3)
 
     def test_after_the_break_exit_the_window_is_free_again(self):
         window, _, tray = self.make()
@@ -250,11 +250,10 @@ class MainWindowTest(unittest.TestCase):
         window._pause_cover._overlays[0]._emergency_button.click()
         self.assertEqual(usage.math_used, 2)
 
-    def test_on_the_pause_screen_it_works_when_only_run_is_offered(self):
+    def test_on_the_pause_screen_it_works_whatever_math_was_used_today(self):
         window, _, _ = self.make(math_used=3)
         self.pause(window)
         overlay = window._pause_cover._overlays[0]
-        self.assertFalse(overlay._stop_button.isVisible())
         overlay._emergency_button.click()
         self.assertFalse(window._pause_cover.is_active)
 

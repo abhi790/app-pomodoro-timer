@@ -1,6 +1,6 @@
 import unittest
 
-from pomodoro.lock_rules import can_stop, controls_enabled
+from pomodoro.lock_rules import controls_enabled
 from pomodoro.timer_logic import Phase, PomodoroTimer, TimerSettings
 from pomodoro.tray_logic import can_quit
 
@@ -17,15 +17,6 @@ class ControlsEnabledTest(unittest.TestCase):
 
     def test_they_are_locked_while_the_pause_screen_is_up(self):
         self.assertFalse(controls_enabled(False, False, True))
-
-
-class CanStopTest(unittest.TestCase):
-    def test_stop_is_offered_while_math_unlocks_are_left(self):
-        for left in (1, 2, 3):
-            self.assertTrue(can_stop(left), left)
-
-    def test_stop_is_not_offered_with_no_math_left(self):
-        self.assertFalse(can_stop(0))
 
 
 class QuitDuringPauseTest(unittest.TestCase):

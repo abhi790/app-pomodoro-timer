@@ -170,7 +170,7 @@ class MainWindow(QWidget):
             # and you choose Run or Stop there.
             self._timer.pause()
             self._pause_cover.show(
-                format_clock(self._timer.remaining_seconds), self._usage.math_left
+                format_clock(self._timer.remaining_seconds), self._usage.math_used
             )
         else:
             self._timer.start()
@@ -318,7 +318,7 @@ class MainWindow(QWidget):
         self._message_label.setText("Time to rest.")
         self._overlay.show(
             format_clock(self._timer.remaining_seconds),
-            self._usage.math_left,
+            self._usage.math_used,
             long_break=self._timer.phase is Phase.LONG_BREAK,
         )
 

@@ -34,7 +34,7 @@ The first build takes a minute or two. `build\` and `dist\` are not saved in git
 - the tomato icon `src/pomodoro/assets/pomodoro.ico`, used for the exe in Explorer and on the desktop. The window and the taskbar still use the tomato the app draws itself
 - no black console window (`--windowed`)
 
-Settings, the daily count and the default chime are written to `%APPDATA%\PomodoroTimer` when the app runs, **the same files as with `python run.py`**. So your settings and your 3 daily unlocks carry over, and the exe leaves nothing inside its own folder.
+Settings, the daily count and the default chime are written to `%APPDATA%\PomodoroTimer` when the app runs, **the same files as with `python run.py`**. So your settings and your day's math count carry over, and the exe leaves nothing inside its own folder.
 
 ## The icon
 

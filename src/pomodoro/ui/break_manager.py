@@ -48,7 +48,7 @@ class BreakOverlayManager(QObject):
         self._clock_text = ""
         self._tip: Optional[Tip] = None
         self._image: Optional[Path] = None
-        self._math_left = 0
+        self._math_used = 0
 
         self._keep_on_top = QTimer(self)
         self._keep_on_top.setInterval(KEEP_ON_TOP_MS)
@@ -73,11 +73,11 @@ class BreakOverlayManager(QObject):
         """Use these ideas of your own (plus the built-in ones) in long breaks."""
         self._ideas = IdeaRotator(custom=ideas)
 
-    def show(self, clock_text: str, math_left: int, long_break: bool = False) -> None:
+    def show(self, clock_text: str, math_used: int, long_break: bool = False) -> None:
         """Open the break windows (does nothing new if already open).
 
-        ``math_left`` is how many math unlocks remain today. With none left,
-        the windows have no way out button and the break runs its full time.
+        ``math_used`` is how many math problems have been solved today
+        already (sets how hard the next one is; leaving early always works).
         In a long break, a creative idea and a healthy tip take turns
         (starting with the idea).
         """
@@ -85,7 +85,7 @@ class BreakOverlayManager(QObject):
         if self.is_active:
             self.update_clock(clock_text)
             return
-        self._math_left = math_left
+        self._math_used = math_used
         self._long_break = long_break
         self._idea_turn = long_break
         self._choose_tip()
@@ -126,7 +126,7 @@ class BreakOverlayManager(QObject):
             overlay.setGeometry(screen.geometry())
             overlay.set_clock(self._clock_text)
             overlay.set_tip(self._tip, self._image, animate=False)
-            overlay.set_unlock_state(self._math_left)
+            overlay.set_unlock_state(self._math_used)
             overlay.math_solved.connect(self.math_unlocked)
             overlay.emergency_exit.connect(self.emergency_exit)
             overlay.showFullScreen()

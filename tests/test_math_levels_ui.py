@@ -32,68 +32,72 @@ class RecordingMaker:
 
 
 class BreakPanelLevelTest(unittest.TestCase):
-    def make(self, math_left: int):
+    def make(self, math_used: int):
         maker = RecordingMaker()
         panel = UnlockPanel(maker)
         self.addCleanup(panel.deleteLater)
-        panel.set_state(math_left)
+        panel.set_state(math_used)
         return panel, maker
 
-    def test_the_first_unlock_of_the_day_asks_for_level_1(self):
-        panel, maker = self.make(math_left=3)
+    def test_the_first_solve_of_the_day_asks_for_level_1(self):
+        panel, maker = self.make(math_used=0)
         panel._leave_button.click()
         self.assertEqual(maker.levels, [1])
 
-    def test_the_second_unlock_asks_for_level_2(self):
-        panel, maker = self.make(math_left=2)
+    def test_the_second_solve_asks_for_level_2(self):
+        panel, maker = self.make(math_used=1)
         panel._leave_button.click()
         self.assertEqual(maker.levels, [2])
 
-    def test_the_third_unlock_asks_for_level_3(self):
-        panel, maker = self.make(math_left=1)
+    def test_the_third_solve_asks_for_level_3(self):
+        panel, maker = self.make(math_used=2)
+        panel._leave_button.click()
+        self.assertEqual(maker.levels, [3])
+
+    def test_every_solve_after_the_third_stays_at_level_3(self):
+        panel, maker = self.make(math_used=9)
         panel._leave_button.click()
         self.assertEqual(maker.levels, [3])
 
     def test_a_wrong_answer_gives_a_new_problem_of_the_same_level(self):
-        panel, maker = self.make(math_left=2)
+        panel, maker = self.make(math_used=1)
         panel._leave_button.click()
         panel._answer_edit.setText("5")
         panel._check_button.click()
         self.assertEqual(maker.levels, [2, 2])
 
     def test_the_text_says_which_level_comes_next(self):
-        for left, level in ((3, 1), (2, 2), (1, 3)):
-            panel, _ = self.make(math_left=left)
-            self.assertIn(f"{left} of 3", panel._status_label.text())
+        for used, level in ((0, 1), (1, 2), (2, 3)):
+            panel, _ = self.make(math_used=used)
             self.assertIn(f"level {level} of 3", panel._status_label.text())
 
-    def test_with_no_unlock_left_the_text_has_no_level(self):
-        panel, _ = self.make(math_left=0)
-        self.assertNotIn("level", panel._status_label.text())
+    def test_the_leave_button_is_always_offered(self):
+        panel, _ = self.make(math_used=0)
+        self.assertTrue(panel._leave_button.isVisibleTo(panel))
 
 
 class PauseScreenLevelTest(unittest.TestCase):
-    def make(self, math_left: int):
+    def make(self, math_used: int):
         maker = RecordingMaker()
         overlay = PauseOverlay(maker)
         self.addCleanup(overlay.deleteLater)
-        overlay.set_math_left(math_left)
+        overlay.set_math_used(math_used)
         return overlay, maker
 
-    def test_stop_asks_for_the_level_of_the_next_unlock(self):
-        for left, level in ((3, 1), (2, 2), (1, 3)):
-            overlay, maker = self.make(math_left=left)
+    def test_stop_asks_for_the_level_of_the_next_solve(self):
+        for used, level in ((0, 1), (1, 2), (2, 3)):
+            overlay, maker = self.make(math_used=used)
             overlay._stop_button.click()
-            self.assertEqual(maker.levels, [level], f"{left} left")
+            self.assertEqual(maker.levels, [level], f"{used} used")
 
     def test_the_text_says_which_level_comes_next(self):
-        for left, level in ((3, 1), (2, 2), (1, 3)):
-            overlay, _ = self.make(math_left=left)
+        for used, level in ((0, 1), (1, 2), (2, 3)):
+            overlay, _ = self.make(math_used=used)
             self.assertIn(f"level {level} of 3", overlay._status_label.text())
 
-    def test_with_no_unlock_left_the_text_has_no_level(self):
-        overlay, _ = self.make(math_left=0)
-        self.assertNotIn("level", overlay._status_label.text())
+    def test_the_stop_button_is_always_offered(self):
+        overlay, _ = self.make(math_used=0)
+        self.assertTrue(overlay._stop_button.isVisibleTo(overlay))
 
 
 class RealProblemsInTheAppTest(unittest.TestCase):

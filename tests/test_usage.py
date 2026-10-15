@@ -6,7 +6,6 @@ from pathlib import Path
 
 from pomodoro import usage as usage_module
 from pomodoro.usage import (
-    DAILY_MATH_LIMIT,
     DailyUsage,
     UsageTracker,
     load_usage,
@@ -28,8 +27,8 @@ class Clock:
 
 
 class ConstantsTest(unittest.TestCase):
-    def test_three_math_unlocks_a_day(self):
-        self.assertEqual(DAILY_MATH_LIMIT, 3)
+    def test_there_is_no_daily_math_cap_any_more(self):
+        self.assertFalse(hasattr(usage_module, "DAILY_MATH_LIMIT"))
 
     def test_there_is_no_important_button_any_more(self):
         # After the 3 math unlocks are used up, the break simply runs its full
@@ -110,22 +109,20 @@ class UsageTrackerTest(unittest.TestCase):
     def tracker(self) -> UsageTracker:
         return UsageTracker(self.path, self.clock)
 
-    def test_starts_with_all_unlocks_left(self):
+    def test_starts_with_nothing_used(self):
         t = self.tracker()
         self.assertEqual(t.math_used, 0)
-        self.assertEqual(t.math_left, DAILY_MATH_LIMIT)
 
-    def test_record_math_counts_down(self):
+    def test_record_math_counts_up(self):
         t = self.tracker()
         t.record_math()
         self.assertEqual(t.math_used, 1)
-        self.assertEqual(t.math_left, DAILY_MATH_LIMIT - 1)
 
-    def test_math_left_stops_at_zero(self):
+    def test_the_count_keeps_growing_with_no_cap(self):
         t = self.tracker()
-        for _ in range(DAILY_MATH_LIMIT + 2):
+        for _ in range(5):
             t.record_math()
-        self.assertEqual(t.math_left, 0)
+        self.assertEqual(t.math_used, 5)
 
     def test_count_is_saved_and_survives_a_restart(self):
         t = self.tracker()
@@ -133,23 +130,22 @@ class UsageTrackerTest(unittest.TestCase):
         t.record_math()
         again = self.tracker()
         self.assertEqual(again.math_used, 2)
-        self.assertEqual(again.math_left, DAILY_MATH_LIMIT - 2)
 
     def test_new_day_after_restart_starts_again(self):
         t = self.tracker()
-        for _ in range(DAILY_MATH_LIMIT):
+        for _ in range(3):
             t.record_math()
         self.clock.today = DAY_TWO
         again = self.tracker()
-        self.assertEqual(again.math_left, DAILY_MATH_LIMIT)
+        self.assertEqual(again.math_used, 0)
 
     def test_midnight_while_the_app_is_open_resets_the_count(self):
         t = self.tracker()
-        for _ in range(DAILY_MATH_LIMIT):
+        for _ in range(3):
             t.record_math()
-        self.assertEqual(t.math_left, 0)
+        self.assertEqual(t.math_used, 3)
         self.clock.today = DAY_TWO  # the clock passes midnight
-        self.assertEqual(t.math_left, DAILY_MATH_LIMIT)
+        self.assertEqual(t.math_used, 0)
 
     def test_first_record_of_the_new_day_counts_as_one(self):
         t = self.tracker()
