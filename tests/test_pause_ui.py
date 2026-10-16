@@ -59,34 +59,32 @@ class PauseWindowTest(unittest.TestCase):
         overlay._answer_edit.setText(str(answer))
         overlay._check_button.click()
 
-    # ----- Reset and Settings are locked while the timer works --------------
+    # ----- Settings is locked while the timer works --------------------------
 
-    def test_reset_and_settings_work_before_the_timer_starts(self):
+    def test_settings_works_before_the_timer_starts(self):
         window, _ = self.make()
-        self.assertTrue(window._reset_button.isEnabled())
         self.assertTrue(window._settings_button.isEnabled())
 
-    def test_reset_and_settings_are_locked_once_the_timer_runs(self):
+    def test_settings_is_locked_once_the_timer_runs(self):
         window, _ = self.make()
         window._on_toggle()  # Start
-        self.assertFalse(window._reset_button.isEnabled())
         self.assertFalse(window._settings_button.isEnabled())
 
-    def test_the_locked_buttons_do_nothing_even_if_called(self):
+    def test_the_locked_settings_button_does_nothing_even_if_called(self):
         window, _ = self.make()
         window._on_toggle()
-        window._timer.tick(100)
-        left = window._timer.remaining_seconds
-        window._on_reset()
-        self.assertEqual(window._timer.remaining_seconds, left)
         with mock.patch("pomodoro.ui.main_window.SettingsDialog") as dialog:
             window._on_settings()
         dialog.assert_not_called()
 
-    def test_they_stay_locked_while_the_pause_screen_is_up(self):
+    def test_there_is_no_reset_button_any_more(self):
+        window, _ = self.make()
+        self.assertFalse(hasattr(window, "_reset_button"))
+        self.assertFalse(hasattr(window, "_on_reset"))
+
+    def test_it_stays_locked_while_the_pause_screen_is_up(self):
         window, _ = self.make()
         self.start_and_pause(window)
-        self.assertFalse(window._reset_button.isEnabled())
         self.assertFalse(window._settings_button.isEnabled())
 
     # ----- Pause opens the pause screen -------------------------------------
@@ -145,11 +143,10 @@ class PauseWindowTest(unittest.TestCase):
         self.cover(window)._run_button.click()
         self.assertEqual(usage.math_used, 0)
 
-    def test_after_run_reset_and_settings_stay_locked(self):
+    def test_after_run_settings_stays_locked(self):
         window, _ = self.make()
         self.start_and_pause(window)
         self.cover(window)._run_button.click()
-        self.assertFalse(window._reset_button.isEnabled())
         self.assertFalse(window._settings_button.isEnabled())
 
     # ----- Stop (math) ------------------------------------------------------
@@ -177,11 +174,10 @@ class PauseWindowTest(unittest.TestCase):
         self.assertEqual(window._timer.completed_pomodoros, 0)
         self.assertEqual(usage.math_used, 1)
 
-    def test_after_stop_reset_and_settings_work_again(self):
+    def test_after_stop_settings_works_again(self):
         window, _ = self.make()
         self.start_and_pause(window)
         self.solve(self.cover(window))
-        self.assertTrue(window._reset_button.isEnabled())
         self.assertTrue(window._settings_button.isEnabled())
         self.assertIn("stopped", window._message_label.text())
 

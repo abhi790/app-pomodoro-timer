@@ -1,22 +1,22 @@
 import unittest
 
-from pomodoro.lock_rules import controls_enabled
+from pomodoro.lock_rules import settings_enabled
 from pomodoro.timer_logic import Phase, PomodoroTimer, TimerSettings
 from pomodoro.tray_logic import can_quit
 
 
-class ControlsEnabledTest(unittest.TestCase):
-    def test_reset_and_settings_work_when_everything_is_stopped(self):
-        self.assertTrue(controls_enabled(False, False, False))
+class SettingsEnabledTest(unittest.TestCase):
+    def test_settings_works_when_everything_is_stopped(self):
+        self.assertTrue(settings_enabled(False, False, False))
 
-    def test_they_are_locked_while_the_timer_runs(self):
-        self.assertFalse(controls_enabled(True, False, False))
+    def test_it_is_locked_while_the_timer_runs(self):
+        self.assertFalse(settings_enabled(True, False, False))
 
-    def test_they_are_locked_during_a_force_break(self):
-        self.assertFalse(controls_enabled(False, True, False))
+    def test_it_is_locked_during_a_force_break(self):
+        self.assertFalse(settings_enabled(False, True, False))
 
-    def test_they_are_locked_while_the_pause_screen_is_up(self):
-        self.assertFalse(controls_enabled(False, False, True))
+    def test_it_is_locked_while_the_pause_screen_is_up(self):
+        self.assertFalse(settings_enabled(False, False, True))
 
 
 class QuitDuringPauseTest(unittest.TestCase):

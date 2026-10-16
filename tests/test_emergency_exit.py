@@ -215,7 +215,6 @@ class MainWindowTest(unittest.TestCase):
         self.assertFalse(tray.quit_enabled)  # Quit is locked during a break
         window._overlay._overlays[0]._emergency_button.click()
         self.assertTrue(tray.quit_enabled)
-        self.assertTrue(window._reset_button.isEnabled())
         self.assertTrue(window._settings_button.isEnabled())
         self.assertIn("Emergency", window._message_label.text())
 
@@ -263,7 +262,7 @@ class MainWindowTest(unittest.TestCase):
         self.assertFalse(tray.quit_enabled)
         window._pause_cover._overlays[0]._emergency_button.click()
         self.assertTrue(tray.quit_enabled)
-        self.assertTrue(window._reset_button.isEnabled())
+        self.assertTrue(window._settings_button.isEnabled())
         self.assertIn("Emergency", window._message_label.text())
 
     def test_a_late_pause_signal_does_nothing_when_no_pause_is_on(self):

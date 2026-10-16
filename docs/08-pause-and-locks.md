@@ -4,9 +4,9 @@ A real Pomodoro is not something you fiddle with halfway. In the classic techniq
 
 ## While the timer runs
 
-- **Reset** and **Settings** are locked (greyed out). You cannot change the times or start over in the middle of a focus block.
-- They work again when the timer is stopped: before the first Start, after a break, and after you Stop (see below).
-- Start and Reset are also locked during a Force Break, as before.
+- **Settings** is locked (greyed out). You cannot change the times in the middle of a focus block.
+- It works again when the timer is stopped: before the first Start, after a break, and after you Stop (see below).
+- Settings is also locked during a Force Break, as before. (There is no Reset button: the count of finished pomodoros resets itself once the long break ends, see [02-timer-logic.md](02-timer-logic.md).)
 
 ## Pause covers the screen
 
@@ -28,7 +28,7 @@ A real Pomodoro is not something you fiddle with halfway. In the classic techniq
 
 **Testing only:** the pause screen also has a small **Emergency exit (testing only)** button in the bottom right corner. It gives the focus block up at once, with no math problem and no change to the daily count (the block does not count, the timer waits for Start). It is switched off for a real release, see [05b-math-unlock.md](05b-math-unlock.md#emergency-exit-testing-only).
 
-While the pause screen is up, Start, Reset, Settings and Quit (tray) are locked, just like during a break. The screen has no close button, ignores Alt+F4 and Esc, and comes back to the front if you click away. Task Manager and Ctrl+Alt+Del still work, because the app does no system tricks.
+While the pause screen is up, Start, Settings and Quit (tray) are locked, just like during a break. The screen has no close button, ignores Alt+F4 and Esc, and comes back to the front if you click away. Task Manager and Ctrl+Alt+Del still work, because the app does no system tricks.
 
 Pause is only for focus blocks. During a break the timer is locked anyway (see [05-force-break-overlay.md](05-force-break-overlay.md)).
 
@@ -36,7 +36,7 @@ Pause is only for focus blocks. During a break the timer is locked anyway (see [
 
 | File | What it does |
 |---|---|
-| `src/pomodoro/lock_rules.py` | When Reset and Settings are locked (no windows, has tests) |
+| `src/pomodoro/lock_rules.py` | When Settings is locked (no windows, has tests) |
 | `src/pomodoro/timer_logic.py` | `abandon_focus()` gives the block up without counting it |
 | `src/pomodoro/tray_logic.py` | `can_quit()` is also false while the pause screen is up |
 | `src/pomodoro/ui/pause_overlay.py` | The pause screen on each monitor: tips, pictures, Run, Stop and the math problem |
@@ -46,10 +46,10 @@ Pause is only for focus blocks. During a break the timer is locked anyway (see [
 
 ## Checking it on Windows
 
-1. Press **Start**: Reset and Settings turn grey and do nothing when clicked.
+1. Press **Start**: Settings turns grey and does nothing when clicked.
 2. Press **Pause**: every monitor shows the pause screen with the time standing still, a healthy tip with a picture (it changes every 10 to 20 seconds) and see-through buttons.
 3. Press **Run**: the screen goes and the clock carries on from the same second.
-4. Press **Pause**, then **Stop**, solve the problem: the timer is back at a full focus block, stopped. The text says "Focus stopped". Reset and Settings work again. "Pomodoros done" did not go up.
+4. Press **Pause**, then **Stop**, solve the problem: the timer is back at a full focus block, stopped. The text says "Focus stopped". Settings works again. "Pomodoros done" did not go up.
 5. Do step 4 several times in a day (or mix in breaks ended early): **Stop** is still offered every time, and the problems get harder (level 2, then level 3, then stays at 3).
 6. While the pause screen is up, right-click the tomato in the tray: **Quit** is greyed out.
 7. On the pause screen press **Emergency exit (testing only)** (bottom right): the screen goes at once, with no math problem. The timer is back at a full focus block, stopped. "Pomodoros done" did not go up, and the day's math count is unchanged.

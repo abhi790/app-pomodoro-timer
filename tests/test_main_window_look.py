@@ -37,8 +37,7 @@ class MainWindowLookTest(unittest.TestCase):
     def test_start_is_the_main_button(self):
         self.assertEqual(self.window._toggle_button.objectName(), "primary")
 
-    def test_reset_and_settings_are_normal_buttons(self):
-        self.assertNotEqual(self.window._reset_button.objectName(), "primary")
+    def test_settings_is_a_normal_button(self):
         self.assertNotEqual(self.window._settings_button.objectName(), "primary")
 
     def test_the_theme_has_a_style_for_the_main_button(self):

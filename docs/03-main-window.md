@@ -24,7 +24,7 @@ The countdown also appears in the window title (for example `29:59 - Focus`), so
 
 - The timer block (phase, countdown, count, mode, message) sits in the **middle** of the window, with the same free space above and below it. It does not hang at the top any more.
 - A small **Day mode / Night mode** button in the top right corner switches the look, see [09-day-night.md](09-day-night.md).
-- **Start / Pause** is the main button, filled with the blue accent color. **Reset** and **Settings** are plain buttons, so the one you press most is easy to find. The colors live in `src/pomodoro/ui/theme.py` (`QPushButton#primary`).
+- **Start / Pause** is the main button, filled with the blue accent color. **Settings** is a plain button, so the one you press most is easy to find. The colors live in `src/pomodoro/ui/theme.py` (`QPushButton#primary`).
 - `tests/test_main_window_look.py` checks both things.
 
 ## Buttons
@@ -32,7 +32,8 @@ The countdown also appears in the window title (for example `29:59 - Focus`), so
 | Button | What it does |
 |---|---|
 | Start / Pause | Runs the countdown. Pause covers the screen with the pause screen (Run or Stop), see [08-pause-and-locks.md](08-pause-and-locks.md) |
-| Reset | Goes back to a fresh first focus block, count at zero. Locked while the timer runs |
+
+There is no Reset button. The count of finished pomodoros goes back to zero by itself once the long break ends.
 
 When a block ends, the timer moves to the next block and waits. Press Start when you are ready.
 

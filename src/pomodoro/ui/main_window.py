@@ -1,4 +1,4 @@
-"""The main window: big countdown plus Start/Pause and Reset buttons.
+"""The main window: big countdown plus Start/Pause and Settings buttons.
 
 All the timing rules live in ``timer_logic.py``. This file only shows the
 state on screen and passes button clicks to the timer.
@@ -21,7 +21,7 @@ from PySide6.QtWidgets import (
 
 from pomodoro.appearance import switch_label, toggled
 from pomodoro.formatting import format_clock
-from pomodoro.lock_rules import controls_enabled
+from pomodoro.lock_rules import settings_enabled
 from pomodoro.settings import MODE_NAME, AppConfig, save_config
 from pomodoro.timer_logic import Phase, PomodoroTimer
 from pomodoro.tray_logic import HIDE, can_quit, close_action, tray_tooltip
@@ -113,16 +113,13 @@ class MainWindow(QWidget):
         self._toggle_button = QPushButton("Start")
         # Start/Pause is the main action, so it stands out (see theme.py).
         self._toggle_button.setObjectName("primary")
-        self._reset_button = QPushButton("Reset")
         self._settings_button = QPushButton("Settings")
         self._toggle_button.clicked.connect(self._on_toggle)
-        self._reset_button.clicked.connect(self._on_reset)
         self._settings_button.clicked.connect(self._on_settings)
 
         buttons = QHBoxLayout()
         for button in (
             self._toggle_button,
-            self._reset_button,
             self._settings_button,
         ):
             button.setMinimumHeight(52)
@@ -153,10 +150,10 @@ class MainWindow(QWidget):
 
     # ----- button actions --------------------------------------------------
 
-    def _controls_enabled(self) -> bool:
-        """Reset and Settings only work while the timer is stopped and no
-        break screen or pause screen is up (see ``lock_rules.py``)."""
-        return controls_enabled(
+    def _settings_enabled(self) -> bool:
+        """Settings only works while the timer is stopped and no break screen
+        or pause screen is up (see ``lock_rules.py``)."""
+        return settings_enabled(
             self._timer.running,
             self._force_break_active,
             self._pause_cover.is_active,
@@ -209,13 +206,6 @@ class MainWindow(QWidget):
         self._message_label.setText("Emergency exit (testing). Focus stopped.")
         self._refresh()
 
-    def _on_reset(self) -> None:
-        if not self._controls_enabled():
-            return
-        self._timer.reset()
-        self._message_label.setText("")
-        self._refresh()
-
     def _on_look_switch(self) -> None:
         """Day or Night: every window changes at once and the choice is saved.
         It is only a look, so it works any time and never touches the timer."""
@@ -229,7 +219,7 @@ class MainWindow(QWidget):
             self._message_label.setText("Could not save your settings.")
 
     def _on_settings(self) -> None:
-        if not self._controls_enabled():
+        if not self._settings_enabled():
             return
         dialog = SettingsDialog(self._config, self, self._sound)
         if dialog.exec() != SettingsDialog.Accepted:
@@ -370,8 +360,6 @@ class MainWindow(QWidget):
         self._tray.set_quit_enabled(
             can_quit(self._force_break_active, self._pause_cover.is_active)
         )
-        controls_on = self._controls_enabled()
-        self._reset_button.setEnabled(controls_on)
-        self._settings_button.setEnabled(controls_on)
+        self._settings_button.setEnabled(self._settings_enabled())
         if self._force_break_active:
             self._overlay.update_clock(clock)

@@ -2,7 +2,9 @@
 
 A real Pomodoro is not something you fiddle with halfway. So:
 
-* While the timer is running, Reset and Settings are locked.
+* While the timer is running, Settings is locked. (There is no Reset button
+  any more: the count of finished pomodoros resets itself once the long
+  break ends, see ``timer_logic.py``.)
 * Pause does not just stop the clock. It covers the screens with the pause
   screen, where you choose Run (carry on) or Stop (give the block up, after a
   math problem). While that screen is up, everything else stays locked too.
@@ -26,12 +28,11 @@ def emergency_exit_visible() -> bool:
     return EMERGENCY_EXIT_ENABLED
 
 
-def controls_enabled(
+def settings_enabled(
     running: bool, break_active: bool, pause_cover_active: bool
 ) -> bool:
-    """True if Reset and Settings may be used right now.
+    """True if Settings may be opened right now.
 
-    They are available only when the timer is stopped and no break screen or
-    pause screen is up.
+    Only when the timer is stopped and no break screen or pause screen is up.
     """
     return not (running or break_active or pause_cover_active)

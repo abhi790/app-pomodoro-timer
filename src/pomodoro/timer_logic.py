@@ -62,7 +62,10 @@ class PomodoroTimer:
 
     def __init__(self, settings: Optional[TimerSettings] = None) -> None:
         self._settings = settings or TimerSettings()
-        self.reset()
+        self._phase = Phase.FOCUS
+        self._remaining = self._settings.duration_seconds(Phase.FOCUS)
+        self._running = False
+        self._completed = 0
 
     # ----- read-only state -------------------------------------------------
 
@@ -84,7 +87,11 @@ class PomodoroTimer:
 
     @property
     def completed_pomodoros(self) -> int:
-        """How many focus blocks were finished since the last reset."""
+        """How many focus blocks were finished in the current cycle.
+
+        Goes back to zero by itself once the long break ends (there is no
+        Reset button any more), so this counts up to
+        ``pomodoros_before_long_break`` and starts again."""
         return self._completed
 
     # ----- controls --------------------------------------------------------
@@ -94,13 +101,6 @@ class PomodoroTimer:
 
     def pause(self) -> None:
         self._running = False
-
-    def reset(self) -> None:
-        """Back to a fresh first focus block, stopped, count at zero."""
-        self._phase = Phase.FOCUS
-        self._remaining = self._settings.duration_seconds(Phase.FOCUS)
-        self._running = False
-        self._completed = 0
 
     def skip(self) -> None:
         """Jump to the next phase without counting the skipped one as done."""
@@ -159,5 +159,9 @@ class PomodoroTimer:
             )
             self._phase = Phase.LONG_BREAK if long_break_due else Phase.SHORT_BREAK
         else:
+            # Leaving the long break (however it ends) starts a fresh cycle,
+            # so the count goes back to zero with no Reset button needed.
+            if self._phase is Phase.LONG_BREAK:
+                self._completed = 0
             self._phase = Phase.FOCUS
         self._remaining = self._settings.duration_seconds(self._phase)

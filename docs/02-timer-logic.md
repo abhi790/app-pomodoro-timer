@@ -28,7 +28,7 @@ All values must be whole numbers of at least 1.
 - The timer starts **stopped**. Press Start to run it.
 - When a block ends, the timer moves to the next block and **stops**. This gives the app a moment to tell you, and you press Start when you are ready.
 - **Skip** jumps to the next block. A skipped focus block does not count as done.
-- **Reset** goes back to a fresh first focus block with the count at zero.
+- There is no Reset button. The count of finished pomodoros goes back to zero by itself once the long break ends, so the cycle (focus → short break, four times, → long break) starts fresh on its own.
 
 ## Run the tests
 

@@ -133,7 +133,7 @@ class PomodoroTimerTest(unittest.TestCase):
         self.assertEqual(t.phase, Phase.FOCUS)
         self.assertEqual(t.remaining_seconds, 30 * 60)
 
-    def test_skip_long_break_goes_to_focus_without_changing_the_count(self):
+    def test_skip_long_break_goes_to_focus_and_resets_the_count(self):
         t = PomodoroTimer()
         for _ in range(4):
             finish_phase(t)  # focus
@@ -141,10 +141,11 @@ class PomodoroTimerTest(unittest.TestCase):
                 break
             finish_phase(t)  # short break
         self.assertEqual(t.phase, Phase.LONG_BREAK)
+        self.assertEqual(t.completed_pomodoros, 4)
         t.start()
         t.skip()
         self.assertEqual(t.phase, Phase.FOCUS)
-        self.assertEqual(t.completed_pomodoros, 4)
+        self.assertEqual(t.completed_pomodoros, 0)
         self.assertEqual(t.remaining_seconds, 30 * 60)
         self.assertFalse(t.running)
 
@@ -157,14 +158,30 @@ class PomodoroTimerTest(unittest.TestCase):
         t.start()
         self.assertEqual(t.remaining_seconds, 5 * 60)
 
-    def test_reset_goes_back_to_start(self):
+    def test_there_is_no_reset_method_any_more(self):
+        # There is no Reset button any more: the count resets itself once the
+        # long break ends (see test_long_break_count_resets_itself).
+        self.assertFalse(hasattr(PomodoroTimer, "reset"))
+
+    def test_long_break_count_resets_itself(self):
         t = PomodoroTimer()
-        finish_phase(t)
-        t.reset()
+        for _ in range(4):
+            finish_phase(t)  # focus
+            if t.phase is Phase.LONG_BREAK:
+                break
+            finish_phase(t)  # short break
+        self.assertEqual(t.phase, Phase.LONG_BREAK)
+        self.assertEqual(t.completed_pomodoros, 4)
+        finish_phase(t)  # the long break ends
         self.assertEqual(t.phase, Phase.FOCUS)
-        self.assertEqual(t.remaining_seconds, 30 * 60)
         self.assertEqual(t.completed_pomodoros, 0)
-        self.assertFalse(t.running)
+
+    def test_a_short_break_does_not_reset_the_count(self):
+        t = PomodoroTimer()
+        finish_phase(t)  # focus -> short break
+        self.assertEqual(t.completed_pomodoros, 1)
+        finish_phase(t)  # short break -> focus
+        self.assertEqual(t.completed_pomodoros, 1)
 
     def test_update_settings_when_stopped_uses_new_length(self):
         t = PomodoroTimer()
