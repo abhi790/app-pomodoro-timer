@@ -16,7 +16,16 @@ Esc. The manager brings it back to the front if you click away.
 from pathlib import Path
 from typing import Optional
 
-from PySide6.QtCore import QRectF, QSize, Qt, QVariantAnimation, Signal
+from PySide6.QtCore import (
+    QEasingCurve,
+    QPropertyAnimation,
+    QRect,
+    QRectF,
+    QSize,
+    Qt,
+    QVariantAnimation,
+    Signal,
+)
 from PySide6.QtGui import (
     QBrush,
     QCloseEvent,
@@ -116,6 +125,7 @@ class BreakOverlay(QWidget):
         self._scene = Scene("")
         self._previous: Optional[Scene] = None
         self._blend = 1.0
+        self._slide_anim: Optional[QPropertyAnimation] = None
 
         self.setWindowTitle("Break time")
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
@@ -219,7 +229,31 @@ class BreakOverlay(QWidget):
         """Close the window. Only the manager calls this."""
         self._allow_close = True
         self._fade.stop()
+        if self._slide_anim is not None:
+            self._slide_anim.stop()
         self.close()
+
+    # ----- sliding up from the bottom (the 10-second warning) --------------
+
+    def slide_in(self, final_rect: QRect, duration_ms: int) -> None:
+        """Animate from the window's current geometry (set by the caller,
+        just below the screen) up to ``final_rect``, so the break screen
+        eases into view instead of appearing all at once."""
+        self._slide_anim = QPropertyAnimation(self, b"geometry", self)
+        self._slide_anim.setDuration(max(duration_ms, 1))
+        self._slide_anim.setStartValue(self.geometry())
+        self._slide_anim.setEndValue(final_rect)
+        self._slide_anim.setEasingCurve(QEasingCurve.OutCubic)
+        self._slide_anim.start()
+
+    def finish_slide(self, final_rect: QRect) -> None:
+        """Stop the slide-in animation, if any, and snap straight to the
+        final, fully-covering position. Safe to call even if there is no
+        animation running (the normal, instant break-screen path)."""
+        if self._slide_anim is not None:
+            self._slide_anim.stop()
+            self._slide_anim = None
+        self.setGeometry(final_rect)
 
     # ----- drawing ---------------------------------------------------------
 

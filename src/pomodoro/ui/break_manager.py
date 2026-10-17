@@ -9,12 +9,18 @@ It also passes on what the user chose on the unlock panel:
 
 The manager does not count anything and does not touch the timer. The main
 window listens to this signal and decides what happens.
+
+``begin_slide_in`` is the 10-second warning: the break screen starts easing
+up from the bottom of each monitor before the focus block has actually
+ended, timed to finish covering the screen exactly as it does. ``show`` (the
+real break start) then just finalizes that slide instead of opening the
+windows again, if it is already running.
 """
 
 from pathlib import Path
 from typing import Optional
 
-from PySide6.QtCore import QObject, QTimer, Signal
+from PySide6.QtCore import QObject, QRect, QTimer, Signal
 from PySide6.QtGui import QGuiApplication
 
 from pomodoro.backgrounds import BackgroundPicker
@@ -49,6 +55,7 @@ class BreakOverlayManager(QObject):
         self._tip: Optional[Tip] = None
         self._image: Optional[Path] = None
         self._math_used = 0
+        self._sliding = False
 
         self._keep_on_top = QTimer(self)
         self._keep_on_top.setInterval(KEEP_ON_TOP_MS)
@@ -83,6 +90,10 @@ class BreakOverlayManager(QObject):
         """
         self._clock_text = clock_text
         if self.is_active:
+            self._finish_slide()
+            self._math_used = math_used
+            for overlay in self._overlays:
+                overlay.set_unlock_state(math_used)
             self.update_clock(clock_text)
             return
         self._math_used = math_used
@@ -92,6 +103,50 @@ class BreakOverlayManager(QObject):
         self._open_overlays()
         self._keep_on_top.start()
         self._schedule_next_tip()
+
+    def begin_slide_in(self, math_used: int, seconds: int, long_break: bool = False) -> None:
+        """The 10-second warning: start the break screen sliding up from the
+        bottom of each monitor, timed to finish covering the screen in
+        ``seconds`` real seconds. Does nothing if the break screens are
+        already open (sliding or not).
+
+        ``long_break`` is a *prediction* (the focus block has not actually
+        finished yet, so the real long-break decision is not made until it
+        does) — it only decides whether the long break's creative idea shows
+        first; ``show()`` corrects the clock and math count once the focus
+        block really ends.
+        """
+        if self.is_active:
+            return
+        self._math_used = math_used
+        self._long_break = long_break
+        self._idea_turn = long_break
+        self._choose_tip()
+        self._sliding = True
+        for screen in QGuiApplication.screens():
+            rect = screen.geometry()
+            below = QRect(rect.x(), rect.y() + rect.height(), rect.width(), rect.height())
+            overlay = BreakOverlay()
+            overlay.setScreen(screen)
+            overlay.setGeometry(below)
+            overlay.set_clock(self._clock_text)
+            overlay.set_tip(self._tip, self._image, animate=False)
+            overlay.set_unlock_state(self._math_used)
+            overlay.math_solved.connect(self.math_unlocked)
+            overlay.emergency_exit.connect(self.emergency_exit)
+            overlay.show()
+            overlay.slide_in(rect, seconds * 1000)
+            self._overlays.append(overlay)
+        if self._overlays:
+            self._overlays[0].activateWindow()
+        self._keep_on_top.start()
+        self._schedule_next_tip()
+
+    def cancel_slide_in(self) -> None:
+        """Stop a slide-in in progress and close the (not yet real) break
+        screens — used when the focus block is paused during the warning."""
+        if self._sliding:
+            self.hide()
 
     def update_clock(self, clock_text: str) -> None:
         self._clock_text = clock_text
@@ -103,8 +158,18 @@ class BreakOverlayManager(QObject):
         self._keep_on_top.stop()
         self._tip_timer.stop()
         self._close_overlays()
+        self._sliding = False
 
     # ----- internals -------------------------------------------------------
+
+    def _finish_slide(self) -> None:
+        """Stop any slide-in animation and snap every overlay straight to
+        fully covering its screen (safe to call even when not sliding)."""
+        for overlay in self._overlays:
+            screen = overlay.screen()
+            if screen is not None:
+                overlay.finish_slide(screen.geometry())
+        self._sliding = False
 
     def _choose_tip(self) -> None:
         if self._long_break and self._idea_turn:
